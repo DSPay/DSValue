@@ -18,3 +18,16 @@
 *.exe
 *.out
 *.app
+autom4te.cache
+aclocal.m4
+config.log
+config.status
+configure
+Makefile
+Makefile.in
+.deps
+build-aux
+bitcoin-config.h
+bitcoin-config.h.in
+stamp-h1
+*.dirstamp
