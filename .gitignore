@@ -31,3 +31,17 @@ bitcoin-config.h
 bitcoin-config.h.in
 stamp-h1
 *.dirstamp
+alertTests.raw.h
+base58_encode_decode.json.h
+base58_keys_invalid.json.h
+base58_keys_valid.json.h
+script_invalid.json.h
+script_valid.json.h
+sig_canonical.json.h
+sig_noncanonical.json.h
+tx_invalid.json.h
+tx_valid.json.h
+Info.plist
+/share/setup.nsi
+build-tests.sh
+run-bitcoind-for-test.sh
