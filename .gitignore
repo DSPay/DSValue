@@ -12,6 +12,9 @@
 # Compiled Static libraries
 *.lai
 *.la
+*.a
+!libleveldb.a
+!libmemenv.a
 *.lib
 
 # Executables
