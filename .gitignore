@@ -48,3 +48,4 @@ Info.plist
 /share/setup.nsi
 build-tests.sh
 run-bitcoind-for-test.sh
+/test_box
