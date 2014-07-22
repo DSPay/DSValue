@@ -49,3 +49,4 @@ Info.plist
 build-tests.sh
 run-bitcoind-for-test.sh
 /test_box
+/src/bitcoin-config.h.in~
