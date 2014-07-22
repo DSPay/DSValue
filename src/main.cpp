@@ -2416,22 +2416,23 @@ bool FindUndoPos(CValidationState &state, int nFile, CDiskBlockPos &pos, unsigne
 bool CheckBlock(const CBlock& block, CValidationState& state, bool fCheckPOW, bool fCheckMerkleRoot) {
 	// These are checks that are independent of context
 	// that can be verified before saving an orphan block.
+	if (block.GetHash() != Params().GenesisBlock().GetHash()) {
+		map<uint256, CBlockIndex*>::iterator mi = mapBlockIndex.find(block.hashPrevBlock);
+		if (mi == mapBlockIndex.end())
+			return state.DoS(10, error("CheckBlock() : prev block not found"), 0, "bad-prevblk");
+		int nHeight = (*mi).second->nHeight + 1;
 
-	map<uint256, CBlockIndex*>::iterator mi = mapBlockIndex.find(block.hashPrevBlock);
-	if (mi == mapBlockIndex.end())
-		return state.DoS(10, error("CheckBlock() : prev block not found"), 0, "bad-prevblk");
-	int nHeight = (*mi).second->nHeight + 1;
+		// Check that the block chain matches the known block chain up to a checkpoint
+		if (!Checkpoints::CheckBlock(nHeight, block.GetHash()))
+			return state.DoS(100, error("CheckBlock() : rejected by checkpoint lock-in at %d", nHeight),
+					REJECT_CHECKPOINT, "checkpoint mismatch");
 
-	// Check that the block chain matches the known block chain up to a checkpoint
-	if (!Checkpoints::CheckBlock(nHeight, block.GetHash()))
-		return state.DoS(100, error("CheckBlock() : rejected by checkpoint lock-in at %d", nHeight),
-				REJECT_CHECKPOINT, "checkpoint mismatch");
+		// Don't accept any forks from the main chain prior to last checkpoint
+		CBlockIndex* pcheckpoint = Checkpoints::GetLastCheckpoint(mapBlockIndex);
+		if (pcheckpoint && nHeight < pcheckpoint->nHeight)
+			return state.DoS(100, error("CheckBlock() : forked chain older than last checkpoint (height %d)", nHeight));
 
-	// Don't accept any forks from the main chain prior to last checkpoint
-	CBlockIndex* pcheckpoint = Checkpoints::GetLastCheckpoint(mapBlockIndex);
-	if (pcheckpoint && nHeight < pcheckpoint->nHeight)
-		return state.DoS(100, error("CheckBlock() : forked chain older than last checkpoint (height %d)", nHeight));
-
+	}
 	// Size limits
 	if (block.vtx.empty() || block.vtx.size() > MAX_BLOCK_SIZE
 			|| ::GetSerializeSize(block, SER_NETWORK, PROTOCOL_VERSION) > MAX_BLOCK_SIZE)

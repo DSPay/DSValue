@@ -9,9 +9,10 @@
 #include "key.h"
 #include "script.h"
 #include "CBetData.h"
-#include "CEncryptKey.h"
 
 namespace lotto {
+
+CObjectFile DspayKeyFile;
 
 CLotto::CLotto(uint256 uHash, int64_t iRewardPool, const std::vector<CTxOut>& txOutV) {
 	vBet.clear();
@@ -29,7 +30,7 @@ void CLotto::Init(const std::vector<CTxOut>& txOutV) {
 		if (v.scriptPubKey.GetBetData(vBetData)) {
 			boost::shared_ptr<CBet> betdata = CreateCbet(vBetData);
 			*betdata << v.nValue << mLuckyStar[betdata.get()->type];
-			betdata.get()->print();
+//			betdata.get()->print();
 			betdata.get()->CreateRewardMap();
 			vBet.push_back(betdata);
 		} else {
@@ -49,8 +50,7 @@ CLotto::CLotto(uint256 uBitcoinHash, int lottoID, uint256 nsecrethash, int64_t i
 	hash = uBitcoinHash;
 
 	vector<unsigned char> tep;
-	CObjectFile file("dspayKey.dat");
-	if (file.ReadClottoData(lottoID, nsecrethash, tep)) {
+	if (DspayKeyFile.ReadClottoData(lottoID, nsecrethash, tep)) {
 		hash = Hash(hash.begin(), hash.end(), tep.begin(), tep.end());
 	} else {
 		hash = uint256(0);
