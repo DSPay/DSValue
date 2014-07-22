@@ -2041,6 +2041,11 @@ void static FindMostWorkChain() {
 			if (it == setBlockIndexValid.rend())
 				return;
 			pindexNew = *it;
+			if(!CheckBTCHashValid(pindexNew))
+			{
+				setBlockIndexValid.erase(pindexNew);
+				continue;
+			}
 		}
 
 		// Check whether all blocks on the path between the currently active chain and the candidate are valid.
@@ -2143,11 +2148,6 @@ bool CheckLastBlockState(int nCurBTCHeight, CValidationState& state) {
 		return true;
 	}
 
-	Bitcoin::CChainManager &chainManager = Bitcoin::CChainManager::CreateChainManagerInstance();
-	if(!chainManager.IsForkState())
-		return true;
-	chainManager.setForkState(false);
-
 	LOCK(cs_bestChain);
 	int nBTCHeight = nCurBTCHeight;
 	CBlockIndex *pindexBlock = chainActive.Tip();
@@ -2183,7 +2183,7 @@ bool CheckActiveChain(int nHeight, uint256 hash) {
 
 	LogPrintf("CheckActiveChain Enter====\n");
 	LogPrintf("check point hash:%s\n", hash.ToString());
-	if (nHeight < 1) {
+	if (nHeight < 1 || nHeight > chainActive.Tip()->nHeight) {
 		return true;
 	}
 	LOCK(cs_bestChain);
@@ -2192,8 +2192,8 @@ bool CheckActiveChain(int nHeight, uint256 hash) {
 	pindexOldTip->print();
 	//Find the active chain dismatch checkpoint
 	if (hash != chainActive[nHeight]->GetBlockHash()) {
-		BOOST_FOREACH(const PAIRTYPE(uint256, CBlockIndex*) &blockIndex,mapBlockIndex)
-				blockIndex.second->print();
+//		BOOST_FOREACH(const PAIRTYPE(uint256, CBlockIndex*) &blockIndex,mapBlockIndex)
+//				blockIndex.second->print();
 		CBlockIndex* pcheckpoint = Checkpoints::GetLastCheckpoint(mapBlockIndex);
 		LogPrintf("Get Last check point:\n");
 		if (pcheckpoint) {
@@ -2206,7 +2206,8 @@ bool CheckActiveChain(int nHeight, uint256 hash) {
 			}
 			chainMostWork.SetTip(pcheckpoint);
 		} else {
-			chainMostWork.SetTip(chainMostWork.Genesis());
+			Assert(chainActive[nHeight-1]);
+			chainMostWork.SetTip(chainActive[nHeight-1]);
 		}
 
 		// Check whether we have something to do.
@@ -2399,7 +2400,21 @@ bool FindUndoPos(CValidationState &state, int nFile, CDiskBlockPos &pos, unsigne
 bool CheckBlock(const CBlock& block, CValidationState& state, bool fCheckPOW, bool fCheckMerkleRoot) {
 	// These are checks that are independent of context
 	// that can be verified before saving an orphan block.
+	map<uint256, CBlockIndex*>::iterator mi = mapBlockIndex.find(block.hashPrevBlock);
+	if (mi == mapBlockIndex.end())
+		return state.DoS(10, error("CheckBlock() : prev block not found"), 0, "bad-prevblk");
+	int nHeight = (*mi).second->nHeight + 1;
 
+	// Check that the block chain matches the known block chain up to a checkpoint
+	if (!Checkpoints::CheckBlock(nHeight, block.GetHash()))
+		return state.DoS(100, error("CheckBlock() : rejected by checkpoint lock-in at %d", nHeight),
+				REJECT_CHECKPOINT, "checkpoint mismatch");
+
+	// Don't accept any forks from the main chain prior to last checkpoint
+	CBlockIndex* pcheckpoint = Checkpoints::GetLastCheckpoint(mapBlockIndex);
+	if (pcheckpoint && nHeight < pcheckpoint->nHeight)
+		return state.DoS(100, error("CheckBlock() : forked chain older than last checkpoint (height %d)", nHeight));
+	
 	// Size limits
 	if (block.vtx.empty() || block.vtx.size() > MAX_BLOCK_SIZE
 			|| ::GetSerializeSize(block, SER_NETWORK, PROTOCOL_VERSION) > MAX_BLOCK_SIZE)

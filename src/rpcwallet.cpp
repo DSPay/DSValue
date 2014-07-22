@@ -217,7 +217,6 @@ Value gettransactionbyaddr(const Array& params, bool fHelp) {
 	map<uint256, CTransaction> revMoneyTx;
 	map<uint256, CTransaction> spendTx;
 	map<uint256,Info> spendInfo;
-	map<uint256, Info> revMoneyInfo;
 	string address = params[0].get_str();
 	string strBetData ="";
 	string str= "";
@@ -468,6 +467,8 @@ Value sendcheckpoint(const Array& params, bool fHelp)
 		{
 			SyncData::CSyncDataDb db;
 			db.WriteCheckpoint(intTemp, data);
+			Checkpoints::AddCheckpoint(point.m_height, point.m_hashCheckpoint);
+			CheckActiveChain(point.m_height, point.m_hashCheckpoint);
 			LOCK(cs_vNodes);
 			BOOST_FOREACH(CNode* pnode, vNodes)
 			{
