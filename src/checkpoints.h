@@ -6,6 +6,7 @@
 #define BITCOIN_CHECKPOINT_H
 
 #include <map>
+#include <vector>
 
 class CBlockIndex;
 class uint256;
@@ -27,6 +28,8 @@ namespace Checkpoints
     double GuessVerificationProgress(CBlockIndex *pindex);
 
     bool AddCheckpoint(int nHeight, uint256 hash);
+
+    bool GetCheckpointByHeight(const int nHeight, std::vector<int> &vCheckpoints);
 
     bool LoadCheckpoint();
 
