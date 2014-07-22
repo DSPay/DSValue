@@ -58,6 +58,7 @@ bool fBenchmark = false;
 bool fTxIndex = false;
 unsigned int nCoinCacheSize = 5000;
 const double g_ldLottoFeeRate = 0.05;
+int nLottoStep = 0;
 
 #ifdef BETCOIN
 static const int64_t nTargetTimespan = 24 * 60 * 60; // DarkCoin: 1 day
@@ -293,7 +294,6 @@ bool GetLotteryKey(int nHeight, int &nID, uint256 &lotterykey) {
 		return true;
 	}
 	lotterykey = uint256(0);
-	if(nID > 1023) return true;
 	CLottoFileKey lottoFileKey;
 	SyncData::CSyncDataDb keyDb;
 	bool ret = keyDb.ReadLotteryKey(nID, lottoFileKey);
@@ -2041,11 +2041,13 @@ void static FindMostWorkChain() {
 			if (it == setBlockIndexValid.rend())
 				return;
 			pindexNew = *it;
+
 			if(!CheckBTCHashValid(pindexNew))
 			{
 				setBlockIndexValid.erase(pindexNew);
 				continue;
 			}
+
 		}
 
 		// Check whether all blocks on the path between the currently active chain and the candidate are valid.
@@ -2112,6 +2114,14 @@ bool ActivateBestChain(CValidationState &state) {
 						InvalidChainFound(chainMostWork.Tip());
 					if(REJECT_INVALID_LOTTO != state.GetRejectCode())
 						fComplete = false;
+					if(REJECT_DIRTY_BLOCK == state.GetRejectCode()){
+						LogPrintf("Delete invalid block hash=%s\n", pindexConnect->GetBlockHash().GetHex());
+						Assert(pindexConnect->pprev);
+						chainMostWork.SetTip(pindexConnect->pprev);
+						setBlockIndexValid.erase(pindexConnect);
+
+					}
+
 					state = CValidationState();
 					break;
 				} else {
@@ -2136,7 +2146,8 @@ bool CheckBTCHashValid(CBlockIndex *pIndex) {
 	Bitcoin::CChainManager &chainManager = Bitcoin::CChainManager::CreateChainManagerInstance();
 	lotto::CLottoHeader lottoHeader = pIndex->lottoHeader;
 	BOOST_FOREACH(const PAIRTYPE(int , uint256) &item, lottoHeader.mBitcoinHash) {
-		if (item.second != chainManager.GetBitcoinBlockIndex(item.first)->GetBlockHash()) {
+		if (NULL != chainManager.GetBitcoinBlockIndex(item.first)
+				&& item.second != chainManager.GetBitcoinBlockIndex(item.first)->GetBlockHash()) {
 			return false;
 		}
 	}
@@ -2148,18 +2159,23 @@ bool CheckLastBlockState(int nCurBTCHeight, CValidationState& state) {
 		return true;
 	}
 
+//	Bitcoin::CChainManager &chainManager = Bitcoin::CChainManager::CreateChainManagerInstance();
+//	if(!chainManager.IsForkState())
+//		return true;
+//	chainManager.setForkState(false);
+
 	LOCK(cs_bestChain);
 	int nBTCHeight = nCurBTCHeight;
 	CBlockIndex *pindexBlock = chainActive.Tip();
 
-	for (int nBTCHeight = nCurBTCHeight; nBTCHeight > nCurBTCHeight - 5 && nBTCHeight > BTC_START_HIGHT; --nBTCHeight) {
+	for (int nBTCHeight = nCurBTCHeight; (nBTCHeight > nCurBTCHeight - 5) && (nBTCHeight > BTC_START_HIGHT); --nBTCHeight) {
 		while (pindexBlock->lottoHeader.mBitcoinHash.count(nBTCHeight) > 0) {
 			pindexBlock = pindexBlock->pprev;
 		}
 	}
 
 	do {
-		LogPrintf("CheckLastBlockState(), check block height:%d\n, lotto=%s", pindexBlock->nHeight, pindexBlock->lottoHeader.ToString().c_str());
+	//	LogPrintf("CheckLastBlockState(), check block height:%d\n, lotto=%s", pindexBlock->nHeight, pindexBlock->lottoHeader.ToString().c_str());
 		if (!CheckBTCHashValid(pindexBlock)) {
 			Assert(pindexBlock->pprev);
 			std::set<CBlockIndex*, CBlockIndexWorkComparator>::reverse_iterator it = setBlockIndexValid.rbegin();
@@ -2400,6 +2416,7 @@ bool FindUndoPos(CValidationState &state, int nFile, CDiskBlockPos &pos, unsigne
 bool CheckBlock(const CBlock& block, CValidationState& state, bool fCheckPOW, bool fCheckMerkleRoot) {
 	// These are checks that are independent of context
 	// that can be verified before saving an orphan block.
+
 	map<uint256, CBlockIndex*>::iterator mi = mapBlockIndex.find(block.hashPrevBlock);
 	if (mi == mapBlockIndex.end())
 		return state.DoS(10, error("CheckBlock() : prev block not found"), 0, "bad-prevblk");
@@ -2414,7 +2431,7 @@ bool CheckBlock(const CBlock& block, CValidationState& state, bool fCheckPOW, bo
 	CBlockIndex* pcheckpoint = Checkpoints::GetLastCheckpoint(mapBlockIndex);
 	if (pcheckpoint && nHeight < pcheckpoint->nHeight)
 		return state.DoS(100, error("CheckBlock() : forked chain older than last checkpoint (height %d)", nHeight));
-	
+
 	// Size limits
 	if (block.vtx.empty() || block.vtx.size() > MAX_BLOCK_SIZE
 			|| ::GetSerializeSize(block, SER_NETWORK, PROTOCOL_VERSION) > MAX_BLOCK_SIZE)
@@ -2483,7 +2500,7 @@ bool CheckLottoResult(const CBlock& block, CValidationState& state){
 
 	lotto::CLottoHeader lottoHeader = block.lottoHeader;
 	if (lottoHeader.mBitcoinHash.empty()) {
-		return state.DoS(100, error("CheckLottoResult() : BTC hash in lottoheader is empty"), REJECT_INVALID_LOTTO,
+		return state.DoS(100, error("CheckLottoResult() : BTC hash in lottoheader is empty"), REJECT_DIRTY_BLOCK,
 				"bad-btc-hash-map", true);
 	}
 	CBlockIndex* pPreBlockIndex = mi->second;
@@ -2499,7 +2516,7 @@ bool CheckLottoResult(const CBlock& block, CValidationState& state){
 		return state.DoS(100,
 				error(
 						"CheckLottoResult() :  BTC height in lottoheader do not followed by a sequence the previous block's lottoheader"),
-						REJECT_INVALID_LOTTO, "bad-btc-hash-sequence", true);
+						REJECT_DIRTY_BLOCK, "bad-btc-hash-sequence", true);
 	}
 	if (lottoHeader.mBitcoinHash.begin()->first != BTC_START_HIGHT) {
 		CBlockIndex *pPreBitcoinIndex = chainManager.GetBitcoinBlockIndex(lottoHeader.mBitcoinHash.begin()->first - 1);
@@ -2534,11 +2551,11 @@ bool CheckLottoResult(const CBlock& block, CValidationState& state){
 				&& *(pBitcoinIndex->pprev->phashBlock) != iterPreBTCHash)
 				|| (*(pBitcoinIndex->phashBlock) != iterBTCHash->second)) {
 			LogPrintf("bitcoinIndex=%s, iterBTCHash=%s\n", pBitcoinIndex->phashBlock->GetHex(), iterBTCHash->second.GetHex());
-			return state.DoS(0, error("CheckLottoResult() : BTC hash in lottoheader mismatch"), REJECT_INVALID_LOTTO,
+			return state.DoS(0, error("CheckLottoResult() : BTC hash in lottoheader mismatch"), REJECT_DIRTY_BLOCK,
 					"bad-btchash", true);
 		}
 		if (iterPreBTCHash == iterBTCHash->second) {
-			return state.DoS(100, error("CheckLottoResult() : BTC hash in lottoheader duplicate"), REJECT_INVALID_LOTTO,
+			return state.DoS(100, error("CheckLottoResult() : BTC hash in lottoheader duplicate"), REJECT_DIRTY_BLOCK,
 					"bad-btchash", true);
 		}
 		iterPreBTCHash = iterBTCHash->second;
@@ -2576,23 +2593,29 @@ bool CheckLottoResult(const CBlock& block, CValidationState& state){
 		LogTrace2("bess","lottoHeader.llPool = %d,llRewards = %d,llPool =%d,nCurBetValue= %d",lottoHeader.llPool,llRewards,llPool,nCurBetValue);
 
 		if ((lottoHeader.llPool + llRewards) != llPool+nCurBetValue) {
-			return state.DoS(100, error("CheckLottoResult(): after draw lotter, lotto pool is not correct"), REJECT_INVALID_LOTTO, "bad-block", true);
+			return state.DoS(100, error("CheckLottoResult(): after draw lotter, lotto pool is not correct"), REJECT_DIRTY_BLOCK, "bad-block", true);
 		}
 		//cout<<vTxOut[0].nValue<<endl;
 		if (vTxOut != lottoTxOut) {
-			return state.DoS(100, error("CheckLottoResult(): draw lottery invalid"), REJECT_INVALID_LOTTO, "bad-block", true);
+			return state.DoS(100, error("CheckLottoResult(): draw lottery invalid"), REJECT_DIRTY_BLOCK, "bad-block", true);
 		}
 	}
 	else {
-
 		if (lottoHeader.llPool != (pPreBlock.lottoHeader.llPool + nCurBetValue)) {
 			LogPrintf("lottoHeader.llPool=%ld, pPreBlock.lottoHeader.llPool=%ld, nCurBetValue=%ld\n",
 					lottoHeader.llPool, pPreBlock.lottoHeader.llPool, nCurBetValue);
-			return state.DoS(100, error("CheckLottoResult(): do not draw lottery, lotto pool is not correct"), REJECT_INVALID_LOTTO, "bad-block", true);
+			return state.DoS(100, error("CheckLottoResult(): do not draw lottery, lotto pool is not correct"), REJECT_DIRTY_BLOCK, "bad-block", true);
 		}
 		if (1 != block.vtx[0].vout.size()) {
-			return state.DoS(100, error("CheckLottoResult(): check coinbase error,the vout size error"), REJECT_INVALID_LOTTO,
+			return state.DoS(100, error("CheckLottoResult(): check coinbase error, the vout size error"), REJECT_DIRTY_BLOCK,
 					"bad-block", true);
+		}
+		if (0 != pPreBlockIndex->nHeight % nIntervalLottery) {
+			if ((uint256(0) != pPreBlockIndex->lottoHeader.uLottoKey
+					&& uint256(1) != pPreBlockIndex->lottoHeader.uLottoKey) && uint256(0) == lottoHeader.uLottoKey) {
+				return state.DoS(100, error("CheckLottoResult(): check coinbase error, the lottokey can't be empty"),
+						REJECT_DIRTY_BLOCK, "bad-block", true);
+			}
 		}
 	}
 	return true;
@@ -3646,6 +3669,10 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv) 
 
 		LOCK(cs_main);
 		cPeerBlockCounts.input(pfrom->nStartingHeight);
+		if (pfrom->nStartingHeight > chainActive.Height())
+		{
+			pfrom->PushMessage("getcheck", chainActive.Height());
+		}
 	}
 
 	else if (pfrom->nVersion == 0) {
@@ -4130,27 +4157,34 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv) 
 	else if (strCommand == "checkpoint")
 	{
 		LogPrintf("enter checkpoint\n");
-		SyncData::CSyncData data;
-		SyncData::CSyncCheckPoint point;
-		vRecv >> data;
-		if (data.CheckSignature(SyncData::strSyncDataPubKey))
+		std::vector<int> vIndex;
+		std::vector<SyncData::CSyncData> vdata;
+		vRecv >> vdata;
+		BOOST_FOREACH(SyncData::CSyncData& data, vdata)
 		{
-			point.SetData(data);
-			SyncData::CSyncDataDb db;
-			if (!db.ExistCheckpoint(point.m_height))
+			if (data.CheckSignature(SyncData::strSyncDataPubKey))
 			{
-				db.WriteCheckpoint(point.m_height, data);
-				Checkpoints::AddCheckpoint(point.m_height, point.m_hashCheckpoint);
-				CheckActiveChain(point.m_height, point.m_hashCheckpoint);
-				pfrom->setcheckPointKnown.insert(point.m_height);
-				LOCK(cs_vNodes);
-				BOOST_FOREACH(CNode* pnode, vNodes)
+				SyncData::CSyncCheckPoint point;
+				point.SetData(data);
+				SyncData::CSyncDataDb db;
+				if (!db.ExistCheckpoint(point.m_height))
 				{
-					if (pnode->setcheckPointKnown.count(point.m_height) == 0)
-					{
-						pnode->setcheckPointKnown.insert(point.m_height);
-						pnode->PushMessage("checkpoint", data);
-					}
+					db.WriteCheckpoint(point.m_height, data);
+					Checkpoints::AddCheckpoint(point.m_height, point.m_hashCheckpoint);
+					CheckActiveChain(point.m_height, point.m_hashCheckpoint);
+					pfrom->setcheckPointKnown.insert(point.m_height);
+				}
+			}
+		}
+		if (vIndex.size() == 1 && vIndex.size() == vdata.size())
+		{
+			LOCK(cs_vNodes);
+			BOOST_FOREACH(CNode* pnode, vNodes)
+			{
+				if (pnode->setcheckPointKnown.count(vIndex[0]) == 0)
+				{
+					pnode->setcheckPointKnown.insert(vIndex[0]);
+					pnode->PushMessage("checkpoint", vdata);
 				}
 			}
 		}
@@ -4160,12 +4194,22 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv) 
 		int height = 0;
 		vRecv >> height;
 		SyncData::CSyncDataDb db;
-		SyncData::CSyncData data;
-		if (pfrom->setcheckPointKnown.count(height) == 0
-			&& db.ReadCheckpoint(height, data))
+		std::vector<SyncData::CSyncData> vdata;
+		std::vector<int> vheight;
+		Checkpoints::GetCheckpointByHeight(height, vheight);
+		for (std::size_t i = 0; i < vheight.size(); ++i)
 		{
-			pfrom->setcheckPointKnown.insert(height);
-			pfrom->PushMessage("checkpoint", data);
+			SyncData::CSyncData data;
+			if (pfrom->setcheckPointKnown.count(vheight[i]) == 0
+				&& db.ReadCheckpoint(vheight[i], data))
+			{
+				pfrom->setcheckPointKnown.insert(height);
+				vdata.push_back(data);
+			}
+		}
+		if (!vdata.empty())
+		{
+			pfrom->PushMessage("checkpoint", vdata);
 		}
 	}
 	else if (strCommand == "lotterykey")

@@ -88,6 +88,16 @@ namespace Checkpoints
 		return db.LoadCheckPoint(*Checkpoints().mapCheckpoints);
 	}
 
+	bool GetCheckpointByHeight(const int nHeight, std::vector<int> &vCheckpoints) {
+		LOCK(cs_checkPoint);
+		MapCheckpoints& checkpoints = *Checkpoints().mapCheckpoints;
+		std::map<int, uint256>::iterator iterMap = checkpoints.upper_bound(nHeight);
+		while (iterMap != checkpoints.end()) {
+			vCheckpoints.push_back(iterMap->first);
+			++iterMap;
+		}
+	}
+
 	bool AddCheckpoint(int nHeight, uint256 hash) {
 		LOCK(cs_checkPoint);
 		MapCheckpoints& checkpoints = *Checkpoints().mapCheckpoints;
