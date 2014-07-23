@@ -33,6 +33,8 @@ namespace Checkpoints
 
     bool LoadCheckpoint();
 
+    void GetCheckpointMap(std::map<int, uint256> &checkpoints);
+
     extern bool fEnabled;
 }
 

@@ -454,17 +454,18 @@ CBlockTemplate* CreateNewBlock(const CScript& scriptPubKeyIn, CValidationState &
         int nID(0);
     	uint256 uLottoKey(0);
     	GetLotteryKey(pindexPrev->nHeight, nID, uLottoKey);
-
-    	if ((pindexPrev->lottoHeader.uLottoKey != uint256(0)
-				&& pindexPrev->lottoHeader.uLottoKey != uint256(1)) && uLottoKey == uint256(0)) {
-			state.DoS(100, error("CreateNewBlock() : the lottokey can't be empty"), REJECT_INVALID_LOTTO,
-					"bad-btc-hash-map", true);
-			{
-				LOCK(cs_vNodes);
-				BOOST_FOREACH(CNode* pnode, vNodes)
-					pnode->PushMessage("getlottokey", nID);
+		if (0 != pindexPrev->nHeight % nIntervalLottery) {
+			if ((pindexPrev->lottoHeader.uLottoKey != uint256(0) && pindexPrev->lottoHeader.uLottoKey != uint256(1))
+					&& uLottoKey == uint256(0)) {
+				state.DoS(100, error("CreateNewBlock() : the lottokey can't be empty"), REJECT_INVALID_LOTTO,
+						"bad-btc-hash-map", true);
+				{
+					LOCK(cs_vNodes);
+					BOOST_FOREACH(CNode* pnode, vNodes)
+						pnode->PushMessage("getlottokey", nID);
+				}
+				return NULL;
 			}
-			return NULL;
 		}
     	lottoHeader.uLottoKey = uLottoKey;
     	lottoHeader.nLottoID = nID;

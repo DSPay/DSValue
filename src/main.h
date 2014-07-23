@@ -1071,6 +1071,39 @@ public:
     CBlockIndex *FindFork(const CBlockLocator &locator) const;
 };
 
+struct CBlockIndexWorkComparator {
+	bool operator()(CBlockIndex *pa, CBlockIndex *pb) {
+		// First sort by most total work, ...
+		if (pa->nChainWork > pb->nChainWork)
+			return false;
+		if (pa->nChainWork < pb->nChainWork)
+			return true;
+
+		if (uint256(0) != pa->lottoHeader.uLottoKey && uint256(0) == pb->lottoHeader.uLottoKey) {
+			return false;
+		}
+		if (uint256(0) == pa->lottoHeader.uLottoKey && uint256(0) != pb->lottoHeader.uLottoKey) {
+			return true;
+		}
+
+		// ... then by earliest time received, ...
+		if (pa->nSequenceId < pb->nSequenceId)
+			return false;
+		if (pa->nSequenceId > pb->nSequenceId)
+			return true;
+
+		// Use pointer address as tie breaker (should only happen with blocks
+		// loaded from disk, as those all have id 0).
+		if (pa < pb)
+			return false;
+		if (pa > pb)
+			return true;
+
+		// Identical blocks.
+		return false;
+		}
+	};
+
 /** The currently-connected chain of blocks. */
 extern CChain chainActive;
 
@@ -1085,6 +1118,8 @@ extern CBlockTreeDB *pblocktree;
 
 /** Global variable that the currently best known chain of headers */
 extern int64_t nIntervalLottery;
+
+extern set<CBlockIndex*, CBlockIndexWorkComparator> setBlockIndexValid;
 
 
 struct CBlockTemplate

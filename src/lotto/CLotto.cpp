@@ -11,6 +11,7 @@
 #include "CBetData.h"
 
 namespace lotto {
+
 CObjectFile DspayKeyFile;
 
 CLotto::CLotto(uint256 uHash, int64_t iRewardPool, const std::vector<CTxOut>& txOutV) {

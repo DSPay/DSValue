@@ -318,7 +318,10 @@ static const CRPCCommand vRPCCommands[] =
     { "tests", 	&tests, false, false, true },
     { "listpoolchange", 	&listpoolchange, false, false, true },
     { "computepeernumcount", 	&computepeernumcount, false, false, true },
-	{ "setbtchashtip", &setbtchashtip, false, false, true}
+	{ "setbtchashtip", &setbtchashtip, false, false, true},
+    { "listsetblockindexvalid", &listsetblockindexvalid, false, false, true},
+    { "listcheckpoint", &listcheckpoint, false, false, true},
+    { "sendcheckpointchain", &sendcheckpointchain, false, false, true},
 };
 
 CRPCTable::CRPCTable()

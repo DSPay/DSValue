@@ -202,4 +202,7 @@ extern json_spirit::Value listlottokey(const json_spirit::Array& params, bool fH
 extern json_spirit::Value listpoolchange(const json_spirit::Array& params, bool fHelp);
 extern json_spirit::Value setbtchashtip(const json_spirit::Array& params, bool fHelp);
 extern json_spirit::Value computepeernumcount(const json_spirit:: Array& params, bool fHelp);
+extern json_spirit::Value listsetblockindexvalid(const json_spirit::Array& params, bool fHelp);
+extern json_spirit::Value sendcheckpointchain(const json_spirit::Array& params, bool fHelp);
+extern json_spirit::Value listcheckpoint(const json_spirit::Array& params, bool fHelp);
 #endif

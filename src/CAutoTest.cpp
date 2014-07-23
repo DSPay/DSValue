@@ -54,7 +54,7 @@ void CAutoTest::CheckAndSendLottoKey(int cycles, int gaptimems, string privateKe
 			int blockhigh = chainActive.Tip()->nHeight;
 			static int lastsendedId = 0;
 			int newid = (blockhigh / GetArg("-intervallotto", 288));
-			if (lastsendedId != newid  ) {
+			if (lastsendedId != newid) {
 				lastsendedId = newid; //updata the id
 				string tem = "";
 				tem += tfm::format("%d", newid);
@@ -66,22 +66,23 @@ void CAutoTest::CheckAndSendLottoKey(int cycles, int gaptimems, string privateKe
 				ConvertTo<boost::int64_t>(strParams[0]);
 				//sendlottokey(strParams, false);
 				string id = sendlottokey(strParams, false).get_str();
-				LogTrace("autotest", "cycles: %d gaptimems:%d,SendLottoKey ID:%d ret: %s\n", cycles,gaptimems,newid, id);
+				Array strParamsCheck;
+				strParamsCheck.push_back(tfm::format("%d", blockhigh).c_str());
+				ConvertTo<boost::int64_t>(strParamsCheck[0]);
+				strParamsCheck.push_back(privateKey);
+				string ret = sendcheckpointchain(strParamsCheck, false).get_str();
+				LogTrace("autotest", "cycles: %d gaptimems:%d,SendLottoKey ID:%d ret: %s, %s\n", cycles, gaptimems,
+						newid, id, ret);
 			}
 			MilliSleep(gaptimems < 1000 ? 1000 : gaptimems);
 		}
 		LogTrace("autotest", "%s thread exit\n", __FUNCTION__);
-	}
-	catch (boost::thread_interrupted) {
+	} catch (boost::thread_interrupted) {
 		LogTrace("autotest", "%s thread interrupt\n", __FUNCTION__);
-		//throw;
-	}
-	catch(Object& objError){
-			LogTrace("autotest", "%s error: %s", __FUNCTION__ , find_value(objError, "message").get_str());
-		}
-	catch (...) {
-		LogTrace("autotest", "%s sendlottoke failed \n", __FUNCTION__);
-		//throw;
+	} catch (Object& objError) {
+		LogTrace("autotest", "%s error: %s", __FUNCTION__, find_value(objError, "message").get_str());
+	} catch (...) {
+		LogTrace("autotest", "%s sendlottokey failed \n", __FUNCTION__);
 	}
 
 }
