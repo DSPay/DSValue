@@ -15,8 +15,10 @@
 #include "CBet156.h"
 #include "CBetMulity.h"
 #include "lotteryfile.h"
+#include "CEncryptKey.h"
 namespace lotto {
 extern const unsigned char gSplitFlag;
+extern CObjectFile DspayKeyFile;
 class CLotto {
 
 	std::vector<boost::shared_ptr<CBet> > vBet;

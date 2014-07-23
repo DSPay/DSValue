@@ -77,6 +77,7 @@ static const unsigned char REJECT_DUST = 0x41;
 static const unsigned char REJECT_INSUFFICIENTFEE = 0x42;
 static const unsigned char REJECT_CHECKPOINT = 0x43;
 static const unsigned char REJECT_INVALID_LOTTO = 0x50;
+static const unsigned char REJECT_DIRTY_BLOCK=0x51;
 
 
 extern CScript COINBASE_FLAGS;
@@ -93,6 +94,7 @@ extern bool fBenchmark;
 extern int nScriptCheckThreads;
 extern bool fTxIndex;
 extern unsigned int nCoinCacheSize;
+extern int nLottoStep;
 
 // Minimum disk space required - used in CheckDiskSpace()
 static const uint64_t nMinDiskSpace = 52428800;

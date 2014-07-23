@@ -2208,8 +2208,6 @@ bool CheckActiveChain(int nHeight, uint256 hash) {
 	pindexOldTip->print();
 	//Find the active chain dismatch checkpoint
 	if (hash != chainActive[nHeight]->GetBlockHash()) {
-//		BOOST_FOREACH(const PAIRTYPE(uint256, CBlockIndex*) &blockIndex,mapBlockIndex)
-//				blockIndex.second->print();
 		CBlockIndex* pcheckpoint = Checkpoints::GetLastCheckpoint(mapBlockIndex);
 		LogPrintf("Get Last check point:\n");
 		if (pcheckpoint) {
@@ -2218,6 +2216,7 @@ bool CheckActiveChain(int nHeight, uint256 hash) {
 			for (; it != setBlockIndexValid.rend(); ++it) {
 				if ((*it)->nHeight > nHeight) {
 					setBlockIndexValid.erase(*it);
+					LogPrintf("setBlockIndexValid size:%d\n", setBlockIndexValid.size());
 				}
 			}
 			chainMostWork.SetTip(pcheckpoint);
@@ -2261,6 +2260,7 @@ bool CheckActiveChain(int nHeight, uint256 hash) {
 			boost::thread t(runCommand, strCmd); // thread runs free
 		}
 	}
+	LogPrintf("CheckActiveChain End====\n");
 	return true;
 }
 
@@ -2417,20 +2417,10 @@ bool CheckBlock(const CBlock& block, CValidationState& state, bool fCheckPOW, bo
 	// These are checks that are independent of context
 	// that can be verified before saving an orphan block.
 
-	map<uint256, CBlockIndex*>::iterator mi = mapBlockIndex.find(block.hashPrevBlock);
-	if (mi == mapBlockIndex.end())
-		return state.DoS(10, error("CheckBlock() : prev block not found"), 0, "bad-prevblk");
-	int nHeight = (*mi).second->nHeight + 1;
 
 	// Check that the block chain matches the known block chain up to a checkpoint
-	if (!Checkpoints::CheckBlock(nHeight, block.GetHash()))
-		return state.DoS(100, error("CheckBlock() : rejected by checkpoint lock-in at %d", nHeight),
-				REJECT_CHECKPOINT, "checkpoint mismatch");
 
 	// Don't accept any forks from the main chain prior to last checkpoint
-	CBlockIndex* pcheckpoint = Checkpoints::GetLastCheckpoint(mapBlockIndex);
-	if (pcheckpoint && nHeight < pcheckpoint->nHeight)
-		return state.DoS(100, error("CheckBlock() : forked chain older than last checkpoint (height %d)", nHeight));
 
 	// Size limits
 	if (block.vtx.empty() || block.vtx.size() > MAX_BLOCK_SIZE
@@ -2488,6 +2478,15 @@ bool CheckBlock(const CBlock& block, CValidationState& state, bool fCheckPOW, bo
 
 bool CheckLottoResult(const CBlock& block, CValidationState& state){
 	//Check CLottoHead is correct
+	if (block.GetHash() != Params().GenesisBlock().GetHash()) {
+		map<uint256, CBlockIndex*>::iterator mi = mapBlockIndex.find(block.hashPrevBlock);
+		if (mi == mapBlockIndex.end())
+			return state.DoS(10, error("CheckBlock() : prev block not found"), 0, "bad-prevblk");
+		int nHeight = (*mi).second->nHeight + 1;
+		if (!Checkpoints::CheckBlock(nHeight, block.GetHash()))
+			return state.DoS(100, error("CheckBlock() : rejected by checkpoint lock-in at %d", nHeight),
+					REJECT_CHECKPOINT, "checkpoint mismatch");
+	}
 	if (block.GetHash() == Params().HashGenesisBlock()) {
 		return true;
 	}

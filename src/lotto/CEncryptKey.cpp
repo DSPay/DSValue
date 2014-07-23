@@ -180,14 +180,6 @@ bool CObjectFile::EncryptClottoKey(string passwd) {
 }
 
 bool CObjectFile::ReadPrivateKey(const int index, const string passwd, vector<unsigned char>& vchout) {
-	if (!ReadObject()) {
-		Assert(0);
-		return false;
-	}
-	if (!GetPkObject()) {
-		Assert(0);
-		return false;
-	}
 
 	Value mm = find_value(Objpk, itostr(index));
 	if (mm.type() != obj_type) {
@@ -221,14 +213,6 @@ bool CObjectFile::ReadPrivateKey(const int index, const string passwd, vector<un
 }
 
 bool CObjectFile::ReadClottoKey(const int index, const string passwd, vector<unsigned char>& vchdataout) {
-	if (!ReadObject()) {
-		Assert(0);
-		return false;
-	}
-	if (!GetLottoKeyObject()) {
-		Assert(0);
-		return false;
-	}
 
 	Value mm = find_value(Objkey, itostr(index));
 	if (mm.type() != obj_type) {
@@ -257,14 +241,6 @@ bool CObjectFile::ReadClottoKey(const int index, const string passwd, vector<uns
 }
 
 bool CObjectFile::ReadClottoData(const int index, const uint256& passwd, vector<unsigned char>& vchdataout) {
-	if (!ReadObject()) {
-		Assert(0);
-		return false;
-	}
-	if (!GetLottoObject()) {
-		Assert(0);
-		return false;
-	}
 
 	Value mm = find_value(Objlotto, itostr(index));
 	if (mm.type() != obj_type) {
@@ -303,4 +279,29 @@ uint256 CObjectFile::BuildMerkleTree(vector<uint256> vhash) {
 		j += nSize;
 	}
 	return (vMerkleTree.empty() ? 0 : vMerkleTree.back());
+}
+bool CObjectFile::Initialize(const std::string& file)
+{
+	bool ret = false;
+	do
+	{
+		path = GetDataDir() / file;
+		if (!boost::filesystem::is_regular_file(path))
+		{
+			Assert(0);
+			break;
+		}
+		if (!ReadObject()) {
+			Assert(0);
+			break;
+		}
+		if (!GetLottoObject()) {
+			Assert(0);
+			break;
+		}
+		GetLottoKeyObject();
+		GetPkObject();
+		ret = true;
+	}while(false);
+	return ret;
 }

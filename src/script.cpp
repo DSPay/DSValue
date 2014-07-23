@@ -1462,6 +1462,7 @@ int ScriptSigArgsExpected(txnouttype t, const std::vector<std::vector<unsigned c
 	switch (t) {
 	case TX_NONSTANDARD:
 	case TX_NULL_DATA:
+	case TX_LOTTO:
 		return -1;
 	case TX_PUBKEY:
 		return 1;
