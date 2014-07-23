@@ -105,7 +105,7 @@ void CAutoTest::SendRandBet(int cycles, int gaptimems,string reciveaddr) {
 		LogTrace("autotest", "thread start:%s\n", __FUNCTION__);
 		int height = chainActive.Height();
 	//	int maxlottoHeight = 1023*GetArg("-intervallotto", 288);
-		while (--cycles > 0 && height <= maxlottoHeight) {
+		while (--cycles > 0) {
 			height = chainActive.Height();
 			double reth = getBanlance();
 			//cout<<"balnce"<<reth<<endl;
