@@ -455,8 +455,8 @@ CBlockTemplate* CreateNewBlock(const CScript& scriptPubKeyIn, CValidationState &
     	uint256 uLottoKey(0);
     	GetLotteryKey(pindexPrev->nHeight, nID, uLottoKey);
 
-    	if ((pindexPrev->lottoHeader.mBitcoinHash.rbegin()->second != uint256(0)
-				&& pindexPrev->lottoHeader.mBitcoinHash.rbegin()->second != uint256(1)) && uLottoKey == uint256(0)) {
+    	if ((pindexPrev->lottoHeader.uLottoKey != uint256(0)
+				&& pindexPrev->lottoHeader.uLottoKey != uint256(1)) && uLottoKey == uint256(0)) {
 			state.DoS(100, error("CreateNewBlock() : the lottokey can't be empty"), REJECT_INVALID_LOTTO,
 					"bad-btc-hash-map", true);
 			{
