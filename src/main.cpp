@@ -91,39 +91,7 @@ CScript COINBASE_FLAGS;
 const string strMessageMagic = "Bitcoin Signed Message:\n";
 
 // Internal stuff
-namespace {
-struct CBlockIndexWorkComparator {
-	bool operator()(CBlockIndex *pa, CBlockIndex *pb) {
-		// First sort by most total work, ...
-		if (pa->nChainWork > pb->nChainWork)
-			return false;
-		if (pa->nChainWork < pb->nChainWork)
-			return true;
 
-		if (uint256(0) != pa->lottoHeader.uLottoKey && uint256(0) == pb->lottoHeader.uLottoKey) {
-			return false;
-		}
-		if (uint256(0) == pa->lottoHeader.uLottoKey && uint256(0) != pb->lottoHeader.uLottoKey) {
-			return true;
-		}
-
-		// ... then by earliest time received, ...
-		if (pa->nSequenceId < pb->nSequenceId)
-			return false;
-		if (pa->nSequenceId > pb->nSequenceId)
-			return true;
-
-		// Use pointer address as tie breaker (should only happen with blocks
-		// loaded from disk, as those all have id 0).
-		if (pa < pb)
-			return false;
-		if (pa > pb)
-			return true;
-
-		// Identical blocks.
-		return false;
-	}
-};
 
 CBlockIndex *pindexBestInvalid;
 set<CBlockIndex*, CBlockIndexWorkComparator> setBlockIndexValid; // may contain all CBlockIndex*'s that have validness >=BLOCK_VALID_TRANSACTIONS, and must contain those who aren't failed
@@ -141,7 +109,7 @@ uint32_t nBlockSequenceId = 1;
 // Sources of received blocks, to be able to send them reject messages or ban
 // them, if processing happens afterwards. Protected by cs_main.
 map<uint256, NodeId> mapBlockSource;
-}
+
 
 //////////////////////////////////////////////////////////////////////////////
 //
@@ -2044,6 +2012,7 @@ void static FindMostWorkChain() {
 
 			if(!CheckBTCHashValid(pindexNew))
 			{
+				pindexNew->nStatus |= BLOCK_FAILED_VALID;
 				setBlockIndexValid.erase(pindexNew);
 				continue;
 			}
@@ -2118,6 +2087,7 @@ bool ActivateBestChain(CValidationState &state) {
 						LogPrintf("Delete invalid block hash=%s\n", pindexConnect->GetBlockHash().GetHex());
 						Assert(pindexConnect->pprev);
 						chainMostWork.SetTip(pindexConnect->pprev);
+						pindexConnect->nStatus |= BLOCK_FAILED_VALID;
 						setBlockIndexValid.erase(pindexConnect);
 
 					}
@@ -2178,11 +2148,20 @@ bool CheckLastBlockState(int nCurBTCHeight, CValidationState& state) {
 	//	LogPrintf("CheckLastBlockState(), check block height:%d\n, lotto=%s", pindexBlock->nHeight, pindexBlock->lottoHeader.ToString().c_str());
 		if (!CheckBTCHashValid(pindexBlock)) {
 			Assert(pindexBlock->pprev);
+			bool bInvalidBlock = false;
 			std::set<CBlockIndex*, CBlockIndexWorkComparator>::reverse_iterator it = setBlockIndexValid.rbegin();
-			for (; it != setBlockIndexValid.rend(); ++it) {
+			for (; it != setBlockIndexValid.rend();) {
+				bInvalidBlock = false;
 				if ((*it)->nHeight > pindexBlock->pprev->nHeight) {
+					(*it)->nStatus |= BLOCK_FAILED_VALID;
 					setBlockIndexValid.erase(*it);
+					it = setBlockIndexValid.rbegin();
+					bInvalidBlock = true;
+				}else{
+					break;
 				}
+				if(!bInvalidBlock)
+					++it;
 			}
 			LogPrintf("setBlockIndexValid size:%d============\n", setBlockIndexValid.size());
 			chainMostWork.SetTip(pindexBlock->pprev);
@@ -2208,22 +2187,77 @@ bool CheckActiveChain(int nHeight, uint256 hash) {
 	pindexOldTip->print();
 	//Find the active chain dismatch checkpoint
 	if (hash != chainActive[nHeight]->GetBlockHash()) {
-//		BOOST_FOREACH(const PAIRTYPE(uint256, CBlockIndex*) &blockIndex,mapBlockIndex)
-//				blockIndex.second->print();
 		CBlockIndex* pcheckpoint = Checkpoints::GetLastCheckpoint(mapBlockIndex);
 		LogPrintf("Get Last check point:\n");
 		if (pcheckpoint) {
 			pcheckpoint->print();
-			std::set<CBlockIndex*, CBlockIndexWorkComparator>::reverse_iterator it = setBlockIndexValid.rbegin();
-			for (; it != setBlockIndexValid.rend(); ++it) {
-				if ((*it)->nHeight > nHeight) {
-					setBlockIndexValid.erase(*it);
-				}
-			}
 			chainMostWork.SetTip(pcheckpoint);
+			bool bInvalidBlock = false;
+			std::set<CBlockIndex*, CBlockIndexWorkComparator>::reverse_iterator it = setBlockIndexValid.rbegin();
+			for (; (it != setBlockIndexValid.rend()) && ((*it)->nHeight >= pcheckpoint->nHeight);) {
+				bInvalidBlock = false;
+				CBlockIndex *pIndexTest = *it;
+				LogPrintf("iterator:height=%d, hash=%s\n",pIndexTest->nHeight, pIndexTest->GetBlockHash().GetHex());
+				if (pcheckpoint->nHeight < nHeight) {
+					if(pIndexTest->nHeight >= nHeight){
+						LogPrintf("CheckActiveChain delete blockindex:%s\n",pIndexTest->GetBlockHash().GetHex());
+						pIndexTest->nStatus |= BLOCK_FAILED_VALID;
+						setBlockIndexValid.erase(pIndexTest);
+						it = setBlockIndexValid.rbegin();
+						bInvalidBlock = true;
+					}
+
+				} else {
+					if (!chainMostWork.Contains(pIndexTest)) {
+						CBlockIndex *pIndexCheck = pIndexTest->pprev;
+						while (pIndexCheck && !chainMostWork.Contains(pIndexCheck)) {
+							pIndexCheck = pIndexCheck->pprev;
+						}
+						if (NULL == pIndexCheck || pIndexCheck->nHeight < pcheckpoint->nHeight) {
+							CBlockIndex *pIndexFailed = pIndexCheck;
+							while (pIndexTest != pIndexFailed) {
+								pIndexTest->nStatus |= BLOCK_FAILED_CHILD;
+								LogPrintf("CheckActiveChain delete blockindex:%s\n",
+										pIndexTest->GetBlockHash().GetHex());
+								setBlockIndexValid.erase(pIndexTest);
+								it = setBlockIndexValid.rbegin();
+								bInvalidBlock = true;
+								pIndexTest = pIndexTest->pprev;
+							}
+						}
+						if (chainMostWork.Contains(pIndexCheck) && chainMostWork.Height() == pIndexCheck->nHeight
+								&& pIndexTest->nChainWork > chainMostWork.Tip()->nChainWork) {
+							chainMostWork.SetTip(pIndexTest);
+							LogPrintf("chainMostWork tip:height=%d, hash=%s\n", pIndexTest->nHeight,
+									pIndexTest->GetBlockHash().GetHex());
+						}
+
+					}
+				}
+				if(!bInvalidBlock)
+					++it;
+			}
+
 		} else {
-			Assert(chainActive[nHeight-1]);
-			chainMostWork.SetTip(chainActive[nHeight-1]);
+			bool bInvalidBlock = false;
+			std::set<CBlockIndex*, CBlockIndexWorkComparator>::reverse_iterator it = setBlockIndexValid.rbegin();
+			for (; it != setBlockIndexValid.rend(); ) {
+				bInvalidBlock = false;
+				if ((*it)->nHeight >= nHeight) {
+					(*it)->nStatus |= BLOCK_FAILED_VALID;
+					setBlockIndexValid.erase(*it);
+					it = setBlockIndexValid.rbegin();
+					bInvalidBlock = true;
+					LogPrintf("setBlockIndexValid size:%d\n", setBlockIndexValid.size());
+				}else{
+					break;
+				}
+				if(!bInvalidBlock)
+					++it;
+
+			}
+			Assert(chainActive[nHeight - 1]);
+			chainMostWork.SetTip(chainActive[nHeight - 1]);
 		}
 
 		// Check whether we have something to do.
@@ -2261,6 +2295,7 @@ bool CheckActiveChain(int nHeight, uint256 hash) {
 			boost::thread t(runCommand, strCmd); // thread runs free
 		}
 	}
+	LogPrintf("CheckActiveChain End====\n");
 	return true;
 }
 
@@ -2416,23 +2451,12 @@ bool FindUndoPos(CValidationState &state, int nFile, CDiskBlockPos &pos, unsigne
 bool CheckBlock(const CBlock& block, CValidationState& state, bool fCheckPOW, bool fCheckMerkleRoot) {
 	// These are checks that are independent of context
 	// that can be verified before saving an orphan block.
-	if (block.GetHash() != Params().GenesisBlock().GetHash()) {
-		map<uint256, CBlockIndex*>::iterator mi = mapBlockIndex.find(block.hashPrevBlock);
-		if (mi == mapBlockIndex.end())
-			return state.DoS(10, error("CheckBlock() : prev block not found"), 0, "bad-prevblk");
-		int nHeight = (*mi).second->nHeight + 1;
 
-		// Check that the block chain matches the known block chain up to a checkpoint
-		if (!Checkpoints::CheckBlock(nHeight, block.GetHash()))
-			return state.DoS(100, error("CheckBlock() : rejected by checkpoint lock-in at %d", nHeight),
-					REJECT_CHECKPOINT, "checkpoint mismatch");
 
-		// Don't accept any forks from the main chain prior to last checkpoint
-		CBlockIndex* pcheckpoint = Checkpoints::GetLastCheckpoint(mapBlockIndex);
-		if (pcheckpoint && nHeight < pcheckpoint->nHeight)
-			return state.DoS(100, error("CheckBlock() : forked chain older than last checkpoint (height %d)", nHeight));
+	// Check that the block chain matches the known block chain up to a checkpoint
 
-	}
+	// Don't accept any forks from the main chain prior to last checkpoint
+
 	// Size limits
 	if (block.vtx.empty() || block.vtx.size() > MAX_BLOCK_SIZE
 			|| ::GetSerializeSize(block, SER_NETWORK, PROTOCOL_VERSION) > MAX_BLOCK_SIZE)
@@ -2489,6 +2513,15 @@ bool CheckBlock(const CBlock& block, CValidationState& state, bool fCheckPOW, bo
 
 bool CheckLottoResult(const CBlock& block, CValidationState& state){
 	//Check CLottoHead is correct
+	if (block.GetHash() != Params().GenesisBlock().GetHash()) {
+		map<uint256, CBlockIndex*>::iterator mi = mapBlockIndex.find(block.hashPrevBlock);
+		if (mi == mapBlockIndex.end())
+			return state.DoS(10, error("CheckBlock() : prev block not found"), 0, "bad-prevblk");
+		int nHeight = (*mi).second->nHeight + 1;
+		if (!Checkpoints::CheckBlock(nHeight, block.GetHash()))
+			return state.DoS(100, error("CheckBlock() : rejected by checkpoint lock-in at %d", nHeight),
+					REJECT_CHECKPOINT, "checkpoint mismatch");
+	}
 	if (block.GetHash() == Params().HashGenesisBlock()) {
 		return true;
 	}
@@ -4174,6 +4207,7 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv) 
 					Checkpoints::AddCheckpoint(point.m_height, point.m_hashCheckpoint);
 					CheckActiveChain(point.m_height, point.m_hashCheckpoint);
 					pfrom->setcheckPointKnown.insert(point.m_height);
+					vIndex.push_back(point.m_height);
 				}
 			}
 		}

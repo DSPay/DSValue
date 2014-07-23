@@ -6,7 +6,8 @@
 #include "rpcserver.h"
 #include "main.h"
 #include "sync.h"
-
+#include "checkpoints.h"
+#include <map>
 #include <stdint.h>
 
 #include "json/json_spirit_value.h"
@@ -456,3 +457,31 @@ Value verifychain(const Array& params, bool fHelp)
     return VerifyDB(nCheckLevel, nCheckDepth);
 }
 
+Value listsetblockindexvalid(const Array& params, bool fHelp)
+{
+	if (fHelp || params.size() != 0) {
+		throw runtime_error("listsetblockindexvalid \n");
+	}
+	Object result;
+	std::set<CBlockIndex*, CBlockIndexWorkComparator>::reverse_iterator it = setBlockIndexValid.rbegin();
+	for (; it != setBlockIndexValid.rend(); ++it) {
+		CBlockIndex *pIndex = *it;
+		result.push_back(Pair(tfm::format("%d",pIndex->nHeight).c_str(), pIndex->GetBlockHash().GetHex()));
+	}
+	return result;
+}
+
+Value listcheckpoint(const Array& params, bool fHelp)
+{
+	if (fHelp || params.size() != 0) {
+			throw runtime_error("listcheckpoint \n");
+		}
+
+	Object result;
+	std::map<int, uint256> checkpointMap;
+	Checkpoints::GetCheckpointMap(checkpointMap);
+	for(std::map<int, uint256>::iterator iterCheck = checkpointMap.begin(); iterCheck != checkpointMap.end(); ++iterCheck){
+		result.push_back(Pair(tfm::format("%d", iterCheck->first).c_str(), iterCheck->second.GetHex()));
+	}
+	return result;
+}

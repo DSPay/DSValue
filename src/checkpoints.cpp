@@ -176,4 +176,10 @@ namespace Checkpoints
         }
         return NULL;
     }
+
+    void GetCheckpointMap(std::map<int, uint256> &mapCheckpoints){
+    	LOCK(cs_checkPoint);
+    	const MapCheckpoints& checkpoints = *Checkpoints().mapCheckpoints;
+    	mapCheckpoints = checkpoints;
+    }
 }

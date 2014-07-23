@@ -199,8 +199,8 @@ bool CChainManager::ProcessBitcoinHeader(CValidationState &state, CBitcoinBlock 
 	// If we don't already have its previous block, shunt it off to holding area until we get it
 	if (block.hashPrevBlock != 0 && !mapBitcoinBlockIndex.count(block.hashPrevBlock) && block.hashPrevBlock != hashBitcoinStartBlock)
 	{
-		LogTrace("Bitcoin","mapBitcoinBlockIndex size:%d\n", mapBitcoinBlockIndex.size());
-		LogTrace("Bitcoin","ProcessBitcoinHeader: ORPHAN BLOCK %lu, prev=%s\n", (unsigned long)mapOrphanBitcoinBlocks.size(), block.hashPrevBlock.ToString());
+//		LogTrace("Bitcoin","mapBitcoinBlockIndex size:%d\n", mapBitcoinBlockIndex.size());
+//		LogTrace("Bitcoin","ProcessBitcoinHeader: ORPHAN BLOCK %lu, prev=%s\n", (unsigned long)mapOrphanBitcoinBlocks.size(), block.hashPrevBlock.ToString());
 //		PruneBitcoinOrphanBlocks();
 //		COrphanBlock* pblock2 = new COrphanBlock();
 //		{
@@ -619,7 +619,7 @@ void CChainManager::FindMostWorkChain()
     do {
         // Find the best candidate header.
         {
-        	LogTrace("Bitcoin","setBitcoinBlockIndexValid size:%d\n",setBitcoinBlockIndexValid.size());
+//        	LogTrace("Bitcoin","setBitcoinBlockIndexValid size:%d\n",setBitcoinBlockIndexValid.size());
             std::set<CBlockIndex*, CBlockIndexWorkComparator>::reverse_iterator it = setBitcoinBlockIndexValid.rbegin();
             if (it == setBitcoinBlockIndexValid.rend())
                 return;
@@ -672,7 +672,7 @@ bool CChainManager::DisconnectTip(CValidationState &state)
     bFork = true;
     LOCK(cs_chainActiveBitcoin);
     chainActiveBitcoin.SetTip(pindexDelete->pprev);
-    LogTrace("Bitcoin",
+    LogTrace("UpdateTip",
 			"UpdateTip: new best=%s  height=%d  log2_work=%.8g  tx=%lu  date=%s progress=%f\n",
 			chainActiveBitcoin.Tip()->GetBlockHash().ToString(),
 			chainActiveBitcoin.Height(),

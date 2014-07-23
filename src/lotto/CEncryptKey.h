@@ -94,8 +94,6 @@ private:
 
 public:
 	CObjectFile() {
-		path = GetDataDir() / "objmain.dat";
-		boost::filesystem::create_directories(path.parent_path());
 		Objmain.clear();
 	}
 	CObjectFile(string file) {
@@ -222,6 +220,7 @@ public:
 	bool ReadPrivateKey(const int index, const string passwd, vector<unsigned char>& vchout);
 	bool ReadClottoKey(const int index, const string passwd, vector<unsigned char>& vchdataout);
 	bool ReadClottoData(const int index, const uint256& passwd, vector<unsigned char>& vchdataout);
+	bool Initialize(const std::string& file);
 };
 
 #endif /* CENCRYPTKEY_H_ */
