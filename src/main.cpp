@@ -4172,6 +4172,7 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv) 
 					Checkpoints::AddCheckpoint(point.m_height, point.m_hashCheckpoint);
 					CheckActiveChain(point.m_height, point.m_hashCheckpoint);
 					pfrom->setcheckPointKnown.insert(point.m_height);
+					vIndex.push_back(point.m_height);
 				}
 			}
 		}
