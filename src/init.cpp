@@ -475,6 +475,7 @@ bool AppInit2(boost::thread_group& threadGroup)
     //set coinbase maturity
     COINBASE_MATURITY = GetArg("-maturity",100);
 
+    nLottoStep = GetArg("-btcheightstep", 6);
     // Make sure enough file descriptors are available
     int nBind = std::max((int)mapArgs.count("-bind"), 1);
     nMaxConnections = GetArg("-maxconnections", 125);

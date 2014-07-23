@@ -12,6 +12,7 @@
 #include "util.h"
 #include "CSyncDataDb.h"
 #include "checkpoints.h"
+#include "CLotto.h"
 #include <boost/algorithm/string/predicate.hpp>
 #include <boost/filesystem.hpp>
 
@@ -175,6 +176,11 @@ bool AppInit(int argc, char* argv[])
 			}
 		}
 		LogPrintf("InitializeSyncDataDb\n");
+		if (!lotto::DspayKeyFile.Initialize("dspayKey.dat"))
+		{
+			LogPrintf("initialize the key fail!\n");
+			return false;
+		}
         fRet = AppInit2(threadGroup);
     }
     catch (std::exception& e) {

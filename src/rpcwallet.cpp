@@ -27,6 +27,7 @@
 #include "CAutoTest.h"
 #include "CEncryptKey.h"
 #include "bitcoinnet/CChainManager.h"
+#include "checkpoints.h"
 using namespace std;
 using namespace boost;
 using namespace boost::assign;
@@ -448,8 +449,7 @@ Value sendcheckpoint(const Array& params, bool fHelp)
 	boost::int32_t intTemp = params[0].get_int();
 	std::string password = params[1].get_str();
 	std::vector<unsigned char> tep;
-	CObjectFile file("dspayKey.dat");
-	file.ReadPrivateKey(0, password, tep);
+	lotto::DspayKeyFile.ReadPrivateKey(0, password, tep);
 	if (!tep.empty() && intTemp > 0 && intTemp <= chainActive.Height())
 	{
 		SyncData::CSyncData data;
@@ -467,14 +467,18 @@ Value sendcheckpoint(const Array& params, bool fHelp)
 			&& data.CheckSignature(SyncData::strSyncDataPubKey))
 		{
 			SyncData::CSyncDataDb db;
+			std::vector<SyncData::CSyncData> vdata;
 			db.WriteCheckpoint(intTemp, data);
+			Checkpoints::AddCheckpoint(point.m_height, point.m_hashCheckpoint);
+			CheckActiveChain(point.m_height, point.m_hashCheckpoint);
+			vdata.push_back(data);
 			LOCK(cs_vNodes);
 			BOOST_FOREACH(CNode* pnode, vNodes)
 			{
 				if (pnode->setcheckPointKnown.count(intTemp) == 0)
 				{
 					pnode->setcheckPointKnown.insert(intTemp);
-					pnode->PushMessage("checkpoint", data);
+					pnode->PushMessage("checkpoint", vdata);
 				}
 			}
 		}
@@ -532,12 +536,11 @@ Value sendlottokey(const Array& params, bool fHelp)
 	std::string lottoPrivateKey = params[2].get_str();
 	std::vector<unsigned char> tep;
 	std::vector<unsigned char> key;
-	CObjectFile file("dspayKey.dat");
-	file.ReadPrivateKey(0, privateKey, tep);
-	std::cout<<"sendlottokey:"<<privateKey<<", "<<lottoPrivateKey<<", "<<HexStr(tep)<<endl;
-	if(!tep.empty() && (intTemp >= 0)&& intTemp <1024*50
-	   && file.ReadClottoKey(intTemp, lottoPrivateKey, key))
+	lotto::DspayKeyFile.ReadPrivateKey(0, privateKey, tep);
+	if(!tep.empty() && (intTemp >= 0)
+	   && lotto::DspayKeyFile.ReadClottoKey(intTemp, lottoPrivateKey, key))
 	{
+		std::cout<<"sendlottokey:"<<privateKey<<", "<<lottoPrivateKey<<", "<<HexStr(key)<<endl;
 		uint256 temp(key);
 		std::vector<uint256> vckey;
 		vckey.push_back(temp);

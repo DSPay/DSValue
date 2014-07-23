@@ -169,10 +169,14 @@ std::string DrawLottery(int64_t drawPool, CBlockIndex *pindexPrev, std::vector<C
 uint256 GetLotteryHash(CBlockIndex *pIndex)
 {
 	int nId = (pIndex->nHeight / nIntervalLottery) - 1;
-	if(nId < 0) return uint256(0);
-	CBlockIndex *pLottorIndex = chainActive[nIntervalLottery*nId];
+	if (nId < 0)
+		return uint256(0);
+	if (nLottoStep >= nIntervalLottery) {
+		nLottoStep = nIntervalLottery - 1;
+	}
+	CBlockIndex *pLottorIndex = chainActive[nIntervalLottery * nId + nLottoStep];
 	Assert(pLottorIndex);
-	return (--(pLottorIndex->lottoHeader.mBitcoinHash.end()))->second;
+	return pLottorIndex->lottoHeader.mBitcoinHash.rbegin()->second;
 }
 
 CBlockTemplate* CreateNewBlock(const CScript& scriptPubKeyIn, CValidationState &state)
@@ -451,6 +455,17 @@ CBlockTemplate* CreateNewBlock(const CScript& scriptPubKeyIn, CValidationState &
     	uint256 uLottoKey(0);
     	GetLotteryKey(pindexPrev->nHeight, nID, uLottoKey);
 
+    	if ((pindexPrev->lottoHeader.uLottoKey != uint256(0)
+				&& pindexPrev->lottoHeader.uLottoKey != uint256(1)) && uLottoKey == uint256(0)) {
+			state.DoS(100, error("CreateNewBlock() : the lottokey can't be empty"), REJECT_INVALID_LOTTO,
+					"bad-btc-hash-map", true);
+			{
+				LOCK(cs_vNodes);
+				BOOST_FOREACH(CNode* pnode, vNodes)
+					pnode->PushMessage("getlottokey", nID);
+			}
+			return NULL;
+		}
     	lottoHeader.uLottoKey = uLottoKey;
     	lottoHeader.nLottoID = nID;
     	LogPrintf("CreateNewBlock:%s\n",lottoHeader.ToString());
