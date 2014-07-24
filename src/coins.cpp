@@ -218,7 +218,6 @@ int64_t CCoinsViewCache::GetTotalCoinsValues(const std::string& address)
 				if(nwalleadres == address)
 				 {
 					 values += item.second.vout[i].nValue;
-					 break;
 				 }
 			}
 		}

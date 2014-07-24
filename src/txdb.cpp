@@ -198,7 +198,6 @@ int64_t CCoinsViewDB::GetTotalCoinsValues(const std::string& address)
 						if(nwalleadres == address)
 						 {
 							 values += data.vout[i].nValue;
-							 break;
 						 }
 					}
 				}
