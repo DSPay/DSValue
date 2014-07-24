@@ -2721,7 +2721,7 @@ Value tests(const Array& params, bool fHelp)
 		}
 		tests1.Inital(reciveaddress, cycles, gaptimems, privateKey, lottoPrivateKey);
 		int type = params[2].get_int();
-		if (type > 0 && type < 5) {
+		if (type > 0 && type < 6) {
 			tests1.startThread(type);
 		} else {
 			Assert(0);

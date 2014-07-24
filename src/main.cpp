@@ -2149,18 +2149,28 @@ bool CheckLastBlockState(int nCurBTCHeight, CValidationState& state) {
 		if (!CheckBTCHashValid(pindexBlock)) {
 			Assert(pindexBlock->pprev);
 			bool bInvalidBlock = false;
+			int nHeight = pindexBlock->nHeight;
 			std::set<CBlockIndex*, CBlockIndexWorkComparator>::reverse_iterator it = setBlockIndexValid.rbegin();
 			for (; it != setBlockIndexValid.rend();) {
 				bInvalidBlock = false;
-				if ((*it)->nHeight > pindexBlock->pprev->nHeight) {
-					(*it)->nStatus |= BLOCK_FAILED_VALID;
-					setBlockIndexValid.erase(*it);
-					it = setBlockIndexValid.rbegin();
-					bInvalidBlock = true;
-				}else{
-					break;
+				CBlockIndex *pBlockTest = *it;
+				while (pBlockTest->nHeight > nHeight) {
+					pBlockTest = pBlockTest->pprev;
 				}
-				if(!bInvalidBlock)
+				if (pBlockTest->GetBlockHash() == pindexBlock->GetBlockHash()) {
+					CBlockIndex *pBlockIndexFailed = *it;
+					while (pBlockIndexFailed != pBlockTest) {
+						pBlockIndexFailed->nStatus |= BLOCK_FAILED_VALID;
+						setBlockIndexValid.erase(pBlockIndexFailed);
+						pBlockIndexFailed = pBlockIndexFailed->pprev;
+						it = setBlockIndexValid.rbegin();
+						bInvalidBlock = true;
+						LogPrintf("setBlockIndexValid size:%d\n", setBlockIndexValid.size());
+					}
+				}
+				if((*it)->nHeight < nHeight)
+					break;
+				if (!bInvalidBlock)
 					++it;
 			}
 			LogPrintf("setBlockIndexValid size:%d============\n", setBlockIndexValid.size());
@@ -2178,7 +2188,7 @@ bool CheckActiveChain(int nHeight, uint256 hash) {
 
 	LogPrintf("CheckActiveChain Enter====\n");
 	LogPrintf("check point hash:%s\n", hash.ToString());
-	if (nHeight < 1 || nHeight > chainActive.Tip()->nHeight) {
+	if (nHeight < 1) {
 		return true;
 	}
 	LOCK(cs_bestChain);
@@ -2186,7 +2196,7 @@ bool CheckActiveChain(int nHeight, uint256 hash) {
 	LogPrintf("Current tip block:\n");
 	pindexOldTip->print();
 	//Find the active chain dismatch checkpoint
-	if (hash != chainActive[nHeight]->GetBlockHash()) {
+	if (NULL == chainActive[nHeight] || hash != chainActive[nHeight]->GetBlockHash()) {
 		CBlockIndex* pcheckpoint = Checkpoints::GetLastCheckpoint(mapBlockIndex);
 		LogPrintf("Get Last check point:\n");
 		if (pcheckpoint) {
@@ -2239,22 +2249,30 @@ bool CheckActiveChain(int nHeight, uint256 hash) {
 			}
 
 		} else {
+			if(NULL == chainActive[nHeight])
+				return true;
 			bool bInvalidBlock = false;
+			CBlockIndex * pInvalidBlockIndex = chainActive[nHeight];
 			std::set<CBlockIndex*, CBlockIndexWorkComparator>::reverse_iterator it = setBlockIndexValid.rbegin();
 			for (; it != setBlockIndexValid.rend(); ) {
 				bInvalidBlock = false;
-				if ((*it)->nHeight >= nHeight) {
-					(*it)->nStatus |= BLOCK_FAILED_VALID;
-					setBlockIndexValid.erase(*it);
-					it = setBlockIndexValid.rbegin();
-					bInvalidBlock = true;
-					LogPrintf("setBlockIndexValid size:%d\n", setBlockIndexValid.size());
-				}else{
-					break;
+				CBlockIndex *pBlockTest = *it;
+				while(pBlockTest->nHeight > nHeight){
+					pBlockTest = pBlockTest->pprev;
+				}
+				if(pBlockTest->GetBlockHash() != hash){
+					CBlockIndex *pBlockIndexFailed = *it;
+					while(pBlockIndexFailed != pBlockTest){
+						pBlockIndexFailed->nStatus |= BLOCK_FAILED_VALID;
+						setBlockIndexValid.erase(pBlockIndexFailed);
+						pBlockIndexFailed = pBlockIndexFailed->pprev;
+						it = setBlockIndexValid.rbegin();
+						bInvalidBlock = true;
+						LogPrintf("setBlockIndexValid size:%d\n", setBlockIndexValid.size());
+					}
 				}
 				if(!bInvalidBlock)
 					++it;
-
 			}
 			Assert(chainActive[nHeight - 1]);
 			chainMostWork.SetTip(chainActive[nHeight - 1]);

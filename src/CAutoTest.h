@@ -96,6 +96,7 @@ public:
 	bool Inital(std::string& revAddir,int cycles, int gaptimems, string &privateKey, string &lottoPrivateKey);
 	int getBestBlockHigh()const;
 	void CheckAndSendLottoKey(int cycles, int gaptimems, string privateKey, string lottoPrivateKey)const;
+	void SendCheckPoint(int cycles, int gaptimems, string privateKey) const;
 	void setgengerate(int cycles, int gaptimems) const;
 	void stopThread();
 	CAutoTest(){

@@ -66,13 +66,8 @@ void CAutoTest::CheckAndSendLottoKey(int cycles, int gaptimems, string privateKe
 				ConvertTo<boost::int64_t>(strParams[0]);
 				//sendlottokey(strParams, false);
 				string id = sendlottokey(strParams, false).get_str();
-				Array strParamsCheck;
-				strParamsCheck.push_back(tfm::format("%d", blockhigh).c_str());
-				ConvertTo<boost::int64_t>(strParamsCheck[0]);
-				strParamsCheck.push_back(privateKey);
-				string ret = sendcheckpointchain(strParamsCheck, false).get_str();
-				LogTrace("autotest", "cycles: %d gaptimems:%d,SendLottoKey ID:%d ret: %s, %s\n", cycles, gaptimems,
-						newid, id, ret);
+				LogTrace("autotest", "cycles: %d gaptimems:%d,SendLottoKey ID:%d, ret: %s\n", cycles, gaptimems,
+						newid, id);
 			}
 			MilliSleep(gaptimems < 1000 ? 1000 : gaptimems);
 		}
@@ -83,6 +78,35 @@ void CAutoTest::CheckAndSendLottoKey(int cycles, int gaptimems, string privateKe
 		LogTrace("autotest", "%s error: %s", __FUNCTION__, find_value(objError, "message").get_str());
 	} catch (...) {
 		LogTrace("autotest", "%s sendlottokey failed \n", __FUNCTION__);
+	}
+
+}
+void CAutoTest::SendCheckPoint(int cycles, int gaptimems, string privateKey) const {
+
+	try {
+		LogTrace("autotest", "thread start:%s\n", __FUNCTION__);
+		while (--cycles > 0) {
+			int tipHeight = chainActive.Tip()->nHeight-1;
+			static int lastsendedHeight = 0;
+			int checkpointHeight = (tipHeight / GetArg("-intervallotto", 288) -1) * nIntervalLottery + nLottoStep;
+			if (lastsendedHeight != checkpointHeight) {
+				lastsendedHeight = checkpointHeight;
+				Array strParamsCheck;
+				strParamsCheck.push_back(tfm::format("%d", checkpointHeight).c_str());
+				ConvertTo<boost::int64_t>(strParamsCheck[0]);
+				strParamsCheck.push_back(privateKey);
+				string ret = sendcheckpointchain(strParamsCheck, false).get_str();
+				LogTrace("autotest", "cycles: %d gaptimems:%d,ret: %s\n", cycles, gaptimems, ret);
+			}
+			MilliSleep(gaptimems < 1000 ? 1000 : gaptimems);
+		}
+		LogTrace("autotest", "%s thread exit\n", __FUNCTION__);
+	} catch (boost::thread_interrupted) {
+		LogTrace("autotest", "%s thread interrupt\n", __FUNCTION__);
+	} catch (Object& objError) {
+		LogTrace("autotest", "%s error: %s", __FUNCTION__, find_value(objError, "message").get_str());
+	} catch (...) {
+		LogTrace("autotest", "%s SendCheckPoint failed \n", __FUNCTION__);
 	}
 
 }
@@ -247,12 +271,13 @@ void CAutoTest::startThread(int type) {
 	} else if (type == 2) {
 		node.reset(new boost::thread(boost::bind(&CAutoTest::SendRandTransation, this, cycles, gaptimems, revAddr)));
 	} else if (type == 3) {
-		node.reset(new boost::thread(boost::bind(&CAutoTest::CheckAndSendLottoKey, this, cycles, gaptimems, privateKey, lottoPrivateKey)));
-		}
-	else if(type == 4)
-		{
-			node.reset(new boost::thread(boost::bind(&CAutoTest::setgengerate, this, cycles, gaptimems)));
-		}
+		node.reset(new boost::thread(boost::bind(&CAutoTest::CheckAndSendLottoKey, this, cycles, gaptimems, privateKey,
+								lottoPrivateKey)));
+	} else if (type == 4) {
+		node.reset(new boost::thread(boost::bind(&CAutoTest::setgengerate, this, cycles, gaptimems)));
+	} else if (type == 5) {
+		node.reset(new boost::thread(boost::bind(&CAutoTest::SendCheckPoint, this, cycles, gaptimems, privateKey)));
+	}
 	else
 		Assert(0);
 	threadmap[type] = node;
