@@ -1047,8 +1047,8 @@ bool EvalScript(vector<vector<unsigned char> >& stack, const CScript& script, co
 				case OP_LOTTO: {
 					if (!script.GetOp(pc, opcode, vchPushValue))
 						return false;
-					if (!lotto::CLotto::IsValid(vchPushValue))
-						return false;
+//					if (!lotto::CLotto::IsValid(vchPushValue))
+//						return false;
 				}
 					break;
 				case OP_LOTTOUNSPEND:   /// logo transation not add corinview

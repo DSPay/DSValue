@@ -89,8 +89,10 @@ bool CTxOut::GetLottoTxOutType(TransactionState &TxType) const
 		if (opcode == OP_LOTTO) {
 			if (!scriptPubKey.GetOp(pc, opcode, vchPushValue))
 				return false;
-			if (!lotto::CLotto::IsValid(vchPushValue))
+			if (!lotto::CLotto::IsValid(vchPushValue,nValue))
+			{
 				TxType = INVALID_LOTTO_STATE;
+			}
 			TxType = VALID_LOTTO_STATE;
 			return true;
 		}

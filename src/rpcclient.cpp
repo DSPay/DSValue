@@ -192,6 +192,7 @@ Array RPCConvertValues(const std::string &strMethod, const std::vector<std::stri
     if (strMethod == "gettransactionbyheight" && n > 0) ConvertTo<boost::int64_t>(params[0]);
     if (strMethod == "listpoolchange" && n > 0) ConvertTo<boost::int64_t>(params[0]);
     if (strMethod == "computepeernumcount" && n > 0) ConvertTo<boost::int64_t>(params[0]);
+    if (strMethod == "sendcheckpointchain" && n > 0) ConvertTo<boost::int64_t>(params[0]);
     return params;
 }
 

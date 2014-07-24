@@ -40,7 +40,7 @@ public:
 		mRewardScheme.clear();
 	}
 	boost::shared_ptr<CBet> CreateCbet(const std::vector<unsigned char> pLotto);
-	static bool IsValid(std::vector<unsigned char>& pLotto);
+	static bool IsValid(std::vector<unsigned char>& pLotto,int64_t nValue);
 	void Init(const std::vector<CTxOut>& txOutV);
 	bool print()const ;
 	std::map<BET_TYPE, std::vector<unsigned char> >&GetLuckyNum(){ return mLuckyStar;};

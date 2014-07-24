@@ -2001,7 +2001,7 @@ void static FindMostWorkChain() {
 		setBlockIndexValid.erase(chainMostWork.Tip());
 		chainMostWork.SetTip(chainMostWork.Tip()->pprev);
 	}
-
+	CBlockIndex* pcheckpoint = Checkpoints::GetLastCheckpoint(mapBlockIndex);
 	do {
 		// Find the best candidate header.
 		{
@@ -2178,15 +2178,15 @@ bool CheckActiveChain(int nHeight, uint256 hash) {
 
 	LogPrintf("CheckActiveChain Enter====\n");
 	LogPrintf("check point hash:%s\n", hash.ToString());
-	if (nHeight < 1 || nHeight > chainActive.Tip()->nHeight) {
-		return true;
+	if (nHeight < 1) //|| nHeight > chainActive.Tip()->nHeight) {
+	{	return true;
 	}
 	LOCK(cs_bestChain);
 	CBlockIndex *pindexOldTip = chainActive.Tip();
 	LogPrintf("Current tip block:\n");
 	pindexOldTip->print();
 	//Find the active chain dismatch checkpoint
-	if (hash != chainActive[nHeight]->GetBlockHash()) {
+	if (NULL == chainActive[nHeight] || hash != chainActive[nHeight]->GetBlockHash()) {
 		CBlockIndex* pcheckpoint = Checkpoints::GetLastCheckpoint(mapBlockIndex);
 		LogPrintf("Get Last check point:\n");
 		if (pcheckpoint) {
@@ -2194,7 +2194,7 @@ bool CheckActiveChain(int nHeight, uint256 hash) {
 			chainMostWork.SetTip(pcheckpoint);
 			bool bInvalidBlock = false;
 			std::set<CBlockIndex*, CBlockIndexWorkComparator>::reverse_iterator it = setBlockIndexValid.rbegin();
-			for (; (it != setBlockIndexValid.rend()) && ((*it)->nHeight >= pcheckpoint->nHeight);) {
+			for (; (it != setBlockIndexValid.rend()) && !chainMostWork.Contains(*it);) {
 				bInvalidBlock = false;
 				CBlockIndex *pIndexTest = *it;
 				LogPrintf("iterator:height=%d, hash=%s\n",pIndexTest->nHeight, pIndexTest->GetBlockHash().GetHex());

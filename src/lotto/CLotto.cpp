@@ -250,7 +250,7 @@ int CLotto::CreateStatisticsRewardMap() {
 //	printf("TOP_3: %lf\n", mRewardScheme[TOP_3]);
 	return 1;
 }
-bool CLotto::IsValid(std::vector<unsigned char>& pLotto) {
+bool CLotto::IsValid(std::vector<unsigned char>& pLotto,int64_t nValue) {
 	lotto::CBetData opLotto;
 	opLotto << pLotto;
 	boost::shared_ptr<CBet> p(new CBet());
@@ -258,13 +258,13 @@ bool CLotto::IsValid(std::vector<unsigned char>& pLotto) {
 	switch (opLotto.GetType()) {
 	case TYPE_15_6: {
 		boost::shared_ptr<CBet_15_6> p(new CBet_15_6());
-		(*p << opLotto);
+		(*p <<nValue<< opLotto);
 		isVflag = p.get()->IsValid();
 	}
 		break;
 	case TYPE_MULILT: {
 		boost::shared_ptr<CBetMulity> p(new CBetMulity());
-		(*p << opLotto);
+		(*p << nValue<<opLotto);
 		isVflag = p.get()->IsValid();
 	}
 		break;
