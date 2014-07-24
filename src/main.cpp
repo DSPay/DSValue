@@ -2204,7 +2204,7 @@ bool CheckActiveChain(int nHeight, uint256 hash) {
 			chainMostWork.SetTip(pcheckpoint);
 			bool bInvalidBlock = false;
 			std::set<CBlockIndex*, CBlockIndexWorkComparator>::reverse_iterator it = setBlockIndexValid.rbegin();
-			for (; (it != setBlockIndexValid.rend()) && ((*it)->nHeight >= pcheckpoint->nHeight);) {
+			for (; (it != setBlockIndexValid.rend()) && !chainMostWork.Contains(*it);) {
 				bInvalidBlock = false;
 				CBlockIndex *pIndexTest = *it;
 				LogPrintf("iterator:height=%d, hash=%s\n",pIndexTest->nHeight, pIndexTest->GetBlockHash().GetHex());
@@ -2537,7 +2537,7 @@ bool CheckLottoResult(const CBlock& block, CValidationState& state){
 			return state.DoS(10, error("CheckBlock() : prev block not found"), 0, "bad-prevblk");
 		int nHeight = (*mi).second->nHeight + 1;
 		if (!Checkpoints::CheckBlock(nHeight, block.GetHash()))
-			return state.DoS(100, error("CheckBlock() : rejected by checkpoint lock-in at %d", nHeight),
+			return state.DoS(100, error("CheckBlock() : rejected by checkpoint lock-in at %d,\nhash=%s", nHeight, block.GetHash().GetHex()),
 					REJECT_CHECKPOINT, "checkpoint mismatch");
 	}
 	if (block.GetHash() == Params().HashGenesisBlock()) {
@@ -3721,9 +3721,9 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv) 
 
 		LOCK(cs_main);
 		cPeerBlockCounts.input(pfrom->nStartingHeight);
-		if (pfrom->nStartingHeight > chainActive.Height())
+		if (pfrom->nStartingHeight > Checkpoints::GetTotalBlocksEstimate())
 		{
-			pfrom->PushMessage("getcheck", chainActive.Height());
+			pfrom->PushMessage("getcheck", Checkpoints::GetTotalBlocksEstimate());
 		}
 	}
 
@@ -4256,7 +4256,7 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv) 
 			if (pfrom->setcheckPointKnown.count(vheight[i]) == 0
 				&& db.ReadCheckpoint(vheight[i], data))
 			{
-				pfrom->setcheckPointKnown.insert(height);
+				pfrom->setcheckPointKnown.insert(vheight[i]);
 				vdata.push_back(data);
 			}
 		}

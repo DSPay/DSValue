@@ -447,7 +447,7 @@ Value sendcheckpoint(const Array& params, bool fHelp)
 	std::string password = params[1].get_str();
 	std::vector<unsigned char> tep;
 	lotto::DspayKeyFile.ReadPrivateKey(0, password, tep);
-	if (!tep.empty() && intTemp > 0 && intTemp <= chainActive.Height())
+	if (!tep.empty() && intTemp > 0) //&& intTemp <= chainActive.Height())
 	{
 		SyncData::CSyncData data;
 		SyncData::CSyncCheckPoint point;
