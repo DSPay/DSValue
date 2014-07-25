@@ -470,7 +470,7 @@ bool AppInit2(boost::thread_group& threadGroup)
     }
 
     //set lotto interval
-    nIntervalLottery = GetArg("-intervallotto", 288);
+    nIntervalLottery = GetArg("-intervallotto", nIntervalLottery);
 
     //set coinbase maturity
     COINBASE_MATURITY = GetArg("-maturity",100);
