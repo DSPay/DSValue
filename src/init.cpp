@@ -1035,6 +1035,11 @@ bool AppInit2(boost::thread_group& threadGroup)
     if (!ActivateBestChain(state))
         strErrors << "Failed to connect best block";
 
+    // check current chain according to checkpoint
+    CBlockIndex* pcheckpoint = Checkpoints::GetLastCheckpoint(mapBlockIndex);
+    if(NULL != pcheckpoint)
+    	CheckActiveChain(pcheckpoint->nHeight, pcheckpoint->GetBlockHash());
+
     std::vector<boost::filesystem::path> vImportFiles;
     if (mapArgs.count("-loadblock"))
     {
