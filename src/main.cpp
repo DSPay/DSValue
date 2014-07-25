@@ -62,7 +62,7 @@ int nLottoStep = 0;
 
 #ifdef BETCOIN
 static const int64_t nTargetTimespan = 24 * 60 * 60; // DarkCoin: 1 day
-static const int64_t nTargetSpacing = 15;//2.5*60 ; //15 for test //2.5 * 60; // DarkCoin: 2.5 minutes
+static const int64_t nTargetSpacing = 2.5*60 ; //15 for test //2.5 * 60; // DarkCoin: 2.5 minutes
 static const int64_t nInterval = nTargetTimespan / nTargetSpacing; // 576
 #else
 		static const int64_t nTargetTimespan = 14 * 24 * 60 * 60; // two weeks
@@ -70,7 +70,7 @@ static const int64_t nInterval = nTargetTimespan / nTargetSpacing; // 576
 		static const int64_t nInterval = nTargetTimespan / nTargetSpacing;
 #endif
 
-int64_t nIntervalLottery = 12 * 60 * 60 / nTargetSpacing; // 288
+int64_t nIntervalLottery = 2.5 * 60 * 60 / nTargetSpacing; // 60
 
 static CMedianFilter<int> cPeerBlockCounts(8, 0); // Amount of blocks that other nodes claim to have
 

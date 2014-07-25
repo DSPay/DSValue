@@ -470,7 +470,7 @@ bool AppInit2(boost::thread_group& threadGroup)
     }
 
     //set lotto interval
-    nIntervalLottery = GetArg("-intervallotto", 288);
+    nIntervalLottery = GetArg("-intervallotto", nIntervalLottery);
 
     //set coinbase maturity
     COINBASE_MATURITY = GetArg("-maturity",100);
@@ -1034,6 +1034,11 @@ bool AppInit2(boost::thread_group& threadGroup)
     CValidationState state;
     if (!ActivateBestChain(state))
         strErrors << "Failed to connect best block";
+
+    // check current chain according to checkpoint
+    CBlockIndex* pcheckpoint = Checkpoints::GetLastCheckpoint(mapBlockIndex);
+    if(NULL != pcheckpoint)
+    	CheckActiveChain(pcheckpoint->nHeight, pcheckpoint->GetBlockHash());
 
     std::vector<boost::filesystem::path> vImportFiles;
     if (mapArgs.count("-loadblock"))
