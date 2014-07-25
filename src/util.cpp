@@ -200,80 +200,84 @@ uint256 GetRandHash() {
 static boost::once_flag debugPrintInitFlag = BOOST_ONCE_INIT;
 // We use boost::call_once() to make sure these are initialized in
 // in a thread-safe manner the first time it is called:
-static FILE* fileout = NULL;
-static boost::mutex* mutexDebugLog = NULL;
+
+struct DebugLogFile
+{
+	DebugLogFile():m_newLine(true), m_fileout(NULL), m_mutexDebugLog(NULL){}
+	bool 			m_newLine;
+	FILE*			m_fileout;
+	boost::mutex* 	m_mutexDebugLog;
+};
+
+static std::map<std::string, DebugLogFile>	g_DebugLogs;
 
 
 static void DebugPrintInit() {
-	assert(fileout == NULL);
-	assert(mutexDebugLog == NULL);
-
-	boost::filesystem::path pathDebug = GetDataDir() / "debug.log";
-	fileout = fopen(pathDebug.string().c_str(), "a");
-	if (fileout)
-		setbuf(fileout, NULL); // unbuffered
-
-	mutexDebugLog = new boost::mutex();
-}
-
-bool LogAcceptCategory(const char* category) {
-	if (category != NULL) {
-		if (!fDebug)
-			return false;
-
-		// Give each thread quick access to -debug settings.
-		// This helps prevent issues debugging global destructors,
-		// where mapMultiArgs might be deleted before another
-		// global destructor calls LogPrint()
-		static boost::thread_specific_ptr<set<string> > ptrCategory;
-		if (ptrCategory.get() == NULL) {
-			const vector<string>& categories = mapMultiArgs["-debug"];
-			ptrCategory.reset(new set<string>(categories.begin(), categories.end()));
-			// thread_specific_ptr automatically deletes the set when the thread ends.
+	const std::vector<string>& categories = mapMultiArgs["-debug"];
+	std::set<std::string> logfiles(categories.begin(), categories.end());
+	logfiles.insert("debug");
+	BOOST_FOREACH(const string& cat, logfiles)
+	{
+		DebugLogFile log;
+		boost::filesystem::path pathDebug;
+		std::string file = cat + ".log";
+		pathDebug = GetDataDir()/file;
+		log.m_fileout = fopen(pathDebug.string().c_str(), "a");
+		if (log.m_fileout)
+		{
+			setbuf(log.m_fileout, NULL); // unbuffered
+			log.m_mutexDebugLog = new boost::mutex();
+			g_DebugLogs[cat] = log;
 		}
-		const set<string>& setCategories = *ptrCategory.get();
-
-		// if not debugging everything and not debugging specific category, LogPrint does nothing.
-		if (setCategories.count(string("")) == 0 && setCategories.count(string(category)) == 0)
-			return false;
 	}
-	return true;
 }
 
-int LogPrintStr(const std::string &str) {
-	int ret = 0; // Returns total number of characters written
+int LogPrintStr(const std::string &str)
+{
+	return LogPrintStr(NULL, str);
+}
 
-	if (fPrintToConsole) {
+int LogPrintStr(const char* category, const std::string &str)
+{
+	int ret = 0; // Returns total number of characters written
+	if (fPrintToConsole)
+	{
 		// print to console
 		ret = fwrite(str.data(), 1, str.size(), stdout);
-	} else if (fPrintToDebugLog) {
-		static bool fStartedNewLine = true;
+	}
+	else if (fPrintToDebugLog)
+	{
 		boost::call_once(&DebugPrintInit, debugPrintInitFlag);
 
-		if (fileout == NULL)
-			return ret;
-
-		boost::mutex::scoped_lock scoped_lock(*mutexDebugLog);
-
-		// reopen the log file, if requested
-		if (fReopenDebugLog) {
-			fReopenDebugLog = false;
-			boost::filesystem::path pathDebug = GetDataDir() / "debug.log";
-			if (freopen(pathDebug.string().c_str(), "a", fileout) != NULL)
-				setbuf(fileout, NULL); // unbuffered
+		std::map<std::string, DebugLogFile>::iterator it;
+		if (NULL == category)
+		{
+			it = g_DebugLogs.find("debug");
 		}
-
-		// Debug print useful for profiling
-		if (fLogTimestamps && fStartedNewLine)
-			ret += fprintf(fileout, "%s ", DateTimeStrFormat("%Y-%m-%d %H:%M:%S", GetTime()).c_str());
-		if (!str.empty() && str[str.size() - 1] == '\n')
-			fStartedNewLine = true;
 		else
-			fStartedNewLine = false;
-
-		ret = fwrite(str.data(), 1, str.size(), fileout);
+		{
+			it = g_DebugLogs.find(category);
+		}
+		if (it != g_DebugLogs.end())
+		{
+			DebugLogFile& log = it->second;
+			boost::mutex::scoped_lock scoped_lock(*log.m_mutexDebugLog);
+			// Debug print useful for profiling
+			if (fLogTimestamps && log.m_newLine)
+			{
+				ret += fprintf(log.m_fileout, "%s ", DateTimeStrFormat("%Y-%m-%d %H:%M:%S", GetTime()).c_str());
+			}
+			if (!str.empty() && str[str.size() - 1] == '\n')
+			{
+				log.m_newLine = true;
+			}
+			else
+			{
+				log.m_newLine = false;
+			}
+			ret = fwrite(str.data(), 1, str.size(), log.m_fileout);
+		}
 	}
-
 	return ret;
 }
 
