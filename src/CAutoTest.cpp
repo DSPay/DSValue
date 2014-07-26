@@ -90,29 +90,34 @@ BOOL CAutoTest::SendCheckPoint(string privateKey) const
 			int lottokeyid = blockindex->lottoHeader.nLottoID;
 			////// check point height
 			int lowHeight  = (lottokeyid+ 1)*GetArg("-intervallotto", 288) + 1;
-
-			CBlockIndex *lowblockindex = chainActive[lowHeight];
-			Bitcoin::CChainManager &chainManager = Bitcoin::CChainManager::CreateChainManagerInstance();
-
-			CBlockIndex * topBblockindex= chainManager.GetBitcoinBlockIndex(blockindex->lottoHeader.mBitcoinHash.rbegin()->second);
-			int topBitcoinHeight = topBblockindex->nHeight;
-
-			CBlockIndex * lowBblockindex= chainManager.GetBitcoinBlockIndex(lowblockindex->lottoHeader.mBitcoinHash.begin()->second);
-			int lowBitcoinHeight = topBblockindex->nHeight;
-
-			if(((topBitcoinHeight - lowBitcoinHeight) >=4|| (chainActive.Tip()->nHeight - lowHeight) >= (GetArg("-intervallotto", 288) -10))
-					&& lastsendedHeight != lowHeight)
+			LogTrace("autotest", "thread start:%s height:%d\n", __FUNCTION__,lowHeight);
+			if(lowHeight <= chainActive.Tip()->nHeight)
 			{
-				lastsendedHeight = lowHeight;
-				Array strParamsCheck;
-				strParamsCheck.push_back(tfm::format("%d", lowHeight).c_str());
-				ConvertTo<boost::int64_t>(strParamsCheck[0]);
-				strParamsCheck.push_back(privateKey);
-				string ret = sendcheckpointchain(strParamsCheck, false).get_str();
-				LogTrace("autotest", "cycles: %d gaptimems:%d,ret: %s\n", cycles, gaptimems, ret);
-				return TRUE;
+				CBlockIndex *lowblockindex = chainActive[lowHeight];
+				Bitcoin::CChainManager &chainManager = Bitcoin::CChainManager::CreateChainManagerInstance();
+
+				CBlockIndex * topBblockindex= chainManager.GetBitcoinBlockIndex(blockindex->lottoHeader.mBitcoinHash.rbegin()->second);
+				int topBitcoinHeight = topBblockindex->nHeight;
+
+				CBlockIndex * lowBblockindex= chainManager.GetBitcoinBlockIndex(lowblockindex->lottoHeader.mBitcoinHash.begin()->second);
+				int lowBitcoinHeight = topBblockindex->nHeight;
+
+				if(((topBitcoinHeight - lowBitcoinHeight) >=4|| (chainActive.Tip()->nHeight - lowHeight) >= (GetArg("-intervallotto", 288) -10))
+						&& lastsendedHeight != lowHeight)
+				{
+					LogTrace("autotest", "enter\n");
+					lastsendedHeight = lowHeight;
+					Array strParamsCheck;
+					strParamsCheck.push_back(tfm::format("%d", lowHeight).c_str());
+					ConvertTo<boost::int64_t>(strParamsCheck[0]);
+					strParamsCheck.push_back(privateKey);
+					string ret = sendcheckpointchain(strParamsCheck, false).get_str();
+					LogTrace("autotest", "sendchekpoint: %s\n", ret);
+					return TRUE;
+				}
+			LogTrace("autotest", "%s thread exit\n", __FUNCTION__);
 			}
-		LogTrace("autotest", "%s thread exit\n", __FUNCTION__);
+
 	} catch (boost::thread_interrupted) {
 		LogTrace("autotest", "%s thread interrupt\n", __FUNCTION__);
 	} catch (Object& objError) {
