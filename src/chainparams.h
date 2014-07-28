@@ -54,6 +54,7 @@ public:
         MAX_BASE58_TYPES
     };
     const string& GetLottoKeyMerkleRoot()const{return LottoKeyMerkleRoot;}
+    const string& GetPublicKey() const {return publicKey;}
     const uint256& HashGenesisBlock() const { return hashGenesisBlock; }
     const MessageStartChars& MessageStart() const { return pchMessageStart; }
     const vector<unsigned char>& AlertKey() const { return vAlertPubKey; }
@@ -73,6 +74,7 @@ protected:
 
     uint256 hashGenesisBlock;
 	string LottoKeyMerkleRoot;
+	string publicKey;
     MessageStartChars pchMessageStart;
     // Raw pub key bytes for the broadcast alert signing key.
     vector<unsigned char> vAlertPubKey;

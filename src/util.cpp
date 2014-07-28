@@ -929,7 +929,7 @@ void ClearDatadirCache() {
 }
 
 boost::filesystem::path GetConfigFile() {
-	boost::filesystem::path pathConfigFile(GetArg("-conf", "bitcoin.conf"));
+	boost::filesystem::path pathConfigFile(GetArg("-conf", "dspay.conf"));
 	if (!pathConfigFile.is_complete())
 		pathConfigFile = GetDataDir(false) / pathConfigFile;
 	return pathConfigFile;
