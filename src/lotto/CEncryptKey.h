@@ -18,7 +18,7 @@ private:
 	string LotteryDataMerkleHash ;
 	json_spirit::Object Objmain;
 	json_spirit::Object Objpk, Objlotto, Objkey;
-#if 1
+#if 0
 	json_spirit::Object Objtest;
 	boost::filesystem::path pathtest;
 #endif
@@ -123,7 +123,7 @@ public:
 		namespace fs = boost::filesystem;
 		pathtmp = fs::system_complete("d:\\bitcoin");
 		path = pathtmp / file;
-#if 1
+#if 0
 		pathtest = pathtmp / "test.dat";
 #endif
 	}
@@ -132,7 +132,7 @@ public:
 		ofstream ofenkey(path.string().c_str());
 		write_formatted(Objmain, ofenkey);
 		ofenkey.close();
-#if 1
+#if 0
 		{
 			ofstream oftest(pathtest.string().c_str());
 			write_formatted(Objtest, oftest);

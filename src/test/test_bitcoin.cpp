@@ -31,7 +31,6 @@ struct TestingSetup {
 #ifdef ENABLE_WALLET
         bitdb.MakeMock();
 #endif
-        mapArgs["-datadir"] = "d:\\bitcoin";
         ReadConfigFile(mapArgs, mapMultiArgs);
         CDebug::instance().Inital(mapMultiArgs);
         if (!SelectParamsFromCommandLine()) {
