@@ -280,8 +280,10 @@ uint256 CObjectFile::BuildMerkleTree(vector<uint256> vhash) {
 	}
 	return (vMerkleTree.empty() ? 0 : vMerkleTree.back());
 }
-bool CObjectFile::Initialize(const std::string& file)
+bool CObjectFile::Initialize(const std::string& file, const std::string&merkleRoot)
 {
+	LotteryDataMerkleHash = merkleRoot;
+
 	bool ret = false;
 	do
 	{

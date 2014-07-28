@@ -88,7 +88,7 @@ void CAutoTest::SendCheckPoint(int cycles, int gaptimems, string privateKey) con
 		while (--cycles > 0) {
 			int tipHeight = chainActive.Tip()->nHeight-1;
 			static int lastsendedHeight = 0;
-			int checkpointHeight = (tipHeight / GetArg("-intervallotto", 288) -1) * nIntervalLottery + nLottoStep;
+			int checkpointHeight = (tipHeight / GetArg("-intervallotto", 60) -1) * nIntervalLottery + nLottoStep;
 			if (lastsendedHeight != checkpointHeight) {
 				lastsendedHeight = checkpointHeight;
 				Array strParamsCheck;

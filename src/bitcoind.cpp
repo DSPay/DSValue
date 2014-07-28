@@ -176,7 +176,7 @@ bool AppInit(int argc, char* argv[])
 			}
 		}
 		LogPrintf("InitializeSyncDataDb\n");
-		if (!lotto::DspayKeyFile.Initialize("dspayKey.dat"))
+		if (!lotto::DspayKeyFile.Initialize("dspayKey.dat",Params().GetLottoKeyMerkleRoot()))
 		{
 			LogPrintf("initialize the key fail!\n");
 			return false;
