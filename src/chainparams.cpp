@@ -43,6 +43,7 @@ public:
         pchMessageStart[1] = 0xfe;
         pchMessageStart[2] = 0x1d;
         pchMessageStart[3] = 0x20;
+        LottoKeyMerkleRoot = "4e327a89024dea2397332e826aa0d787d3d008f3e489ada07c8b02ae78c83c5a";
         vAlertPubKey = ParseHex("02da1cf00411326ed0a29ed307666ace2a7a071bac0276d4c5d507710b7c3b6022");
         nDefaultPort = 8666;
         nRPCPort = 8667;
@@ -150,7 +151,7 @@ public:
         nDefaultPort = 18666;
         nRPCPort = 18667;
         strDataDir = "testnet3";
-
+        LottoKeyMerkleRoot = "b2a8ce5ac4aab2a6f1d7ef694d72b3c05ace80d543feeeb7e320be7c534ab4d0";
         // Modify the testnet genesis block so the timestamp is valid for a later start.
         genesis.nTime = 1404252000;
         genesis.nNonce = 238;
@@ -193,6 +194,8 @@ static CTestNetParams testNetParams;
 class CRegTestParams : public CTestNetParams {
 public:
     CRegTestParams() {
+
+    	LottoKeyMerkleRoot = "b2a8ce5ac4aab2a6f1d7ef694d72b3c05ace80d543feeeb7e320be7c534ab4d0";
 #if (BETCOIN == 1)
 		pchMessageStart[0] = 0xfc;
 		pchMessageStart[1] = 0x1d;

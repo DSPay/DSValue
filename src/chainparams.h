@@ -33,6 +33,8 @@ struct CDNSSeedData {
  */
 class CChainParams
 {
+
+
 public:
     enum Network {
         MAIN,
@@ -51,7 +53,7 @@ public:
 
         MAX_BASE58_TYPES
     };
-
+    const string& GetLottoKeyMerkleRoot()const{return LottoKeyMerkleRoot;}
     const uint256& HashGenesisBlock() const { return hashGenesisBlock; }
     const MessageStartChars& MessageStart() const { return pchMessageStart; }
     const vector<unsigned char>& AlertKey() const { return vAlertPubKey; }
@@ -70,6 +72,7 @@ protected:
     CChainParams() {}
 
     uint256 hashGenesisBlock;
+	string LottoKeyMerkleRoot;
     MessageStartChars pchMessageStart;
     // Raw pub key bytes for the broadcast alert signing key.
     vector<unsigned char> vAlertPubKey;

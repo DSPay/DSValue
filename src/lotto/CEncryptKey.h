@@ -15,6 +15,7 @@ using namespace boost;
 
 class CObjectFile {
 private:
+	string LotteryDataMerkleHash ;
 	json_spirit::Object Objmain;
 	json_spirit::Object Objpk, Objlotto, Objkey;
 #if 1
@@ -36,7 +37,7 @@ private:
 	}
 
 	bool GetLottoObject() {
-		const string LotteryDataMerkleHash = "b2a8ce5ac4aab2a6f1d7ef694d72b3c05ace80d543feeeb7e320be7c534ab4d0";
+
 		Objlotto.clear();
 		Objlotto = find_value(Objmain, "lottorydata").get_obj();
 		if (Objlotto.size() > 0) {
@@ -220,7 +221,7 @@ public:
 	bool ReadPrivateKey(const int index, const string passwd, vector<unsigned char>& vchout);
 	bool ReadClottoKey(const int index, const string passwd, vector<unsigned char>& vchdataout);
 	bool ReadClottoData(const int index, const uint256& passwd, vector<unsigned char>& vchdataout);
-	bool Initialize(const std::string& file);
+	bool Initialize(const std::string& file,const std::string&merkleroot);
 };
 
 #endif /* CENCRYPTKEY_H_ */
