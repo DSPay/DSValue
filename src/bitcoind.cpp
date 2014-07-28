@@ -88,10 +88,6 @@ bool AppInit(int argc, char* argv[])
         //
         // If Qt is used, parameters/bitcoin.conf are parsed in qt/bitcoin.cpp's main()
         ParseParameters(argc, argv);
-        if(!mapArgs.count("-datadir"))
-        {
-        	mapArgs["-datadir"] = "d:\\bitcoin";
-        }
         if (!boost::filesystem::is_directory(GetDataDir(false)))
         {
             fprintf(stderr, "Error: Specified data directory \"%s\" does not exist.\n", mapArgs["-datadir"].c_str());
