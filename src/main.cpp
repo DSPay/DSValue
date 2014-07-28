@@ -1195,7 +1195,7 @@ unsigned int static DarkGravityWave3(const CBlockIndex* pindexLast, const CBlock
 
 unsigned int GetNextWorkRequired(const CBlockIndex* pindexLast, const CBlockHeader *pblock) {
 	//change for test
-	if(!GetBoolArg("-debugdiffculty",false))
+	if(!GetBoolArg("-debugdiffculty",true))
 	{
 	return Params().ProofOfWorkLimit().GetCompact();
 	}
