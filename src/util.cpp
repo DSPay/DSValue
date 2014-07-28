@@ -204,6 +204,11 @@ static boost::once_flag debugPrintInitFlag = BOOST_ONCE_INIT;
 struct DebugLogFile
 {
 	DebugLogFile():m_newLine(true), m_fileout(NULL), m_mutexDebugLog(NULL){}
+	~DebugLogFile()
+	{
+		fclose(m_fileout);
+		delete m_mutexDebugLog;
+	}
 	bool 			m_newLine;
 	FILE*			m_fileout;
 	boost::mutex* 	m_mutexDebugLog;
@@ -218,16 +223,17 @@ static void DebugPrintInit() {
 	logfiles.insert("debug");
 	BOOST_FOREACH(const string& cat, logfiles)
 	{
-		DebugLogFile log;
+		FILE* fileout = NULL;
 		boost::filesystem::path pathDebug;
 		std::string file = cat + ".log";
 		pathDebug = GetDataDir()/file;
-		log.m_fileout = fopen(pathDebug.string().c_str(), "a");
-		if (log.m_fileout)
+		fileout = fopen(pathDebug.string().c_str(), "a");
+		if (fileout)
 		{
-			setbuf(log.m_fileout, NULL); // unbuffered
+			DebugLogFile& log = g_DebugLogs[cat];
+			setbuf(fileout, NULL); // unbuffered
+			log.m_fileout = fileout;
 			log.m_mutexDebugLog = new boost::mutex();
-			g_DebugLogs[cat] = log;
 		}
 	}
 }
