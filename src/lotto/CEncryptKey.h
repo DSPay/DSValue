@@ -32,14 +32,24 @@ private:
 
 	bool GetPkObject() {
 		Objpk.clear();
-		Objpk = find_value(Objmain, "privatekey").get_obj();
+		Value rootkey = find_value(Objmain, "privatekey");
+		if (Value::null == rootkey)
+		{
+			return false;
+		}
+		Objpk = rootkey.get_obj();
 		return (Objpk.size() > 0) ? (true) : (false);
 	}
 
 	bool GetLottoObject() {
 
 		Objlotto.clear();
-		Objlotto = find_value(Objmain, "lottorydata").get_obj();
+		Value rootkey = find_value(Objmain, "lottorydata");
+		if (Value::null == rootkey)
+		{
+			return false;
+		}
+		Objlotto = rootkey.get_obj();
 		if (Objlotto.size() > 0) {
 			Object ohash = find_value(Objlotto, "MerkleHash").get_obj();
 			std::string merkleHash = find_value(ohash, "MerkleHash").get_str();
@@ -68,7 +78,12 @@ private:
 	bool GetLottoKeyObject() {
 		const std::string LotteryKeyMerkleHash = "095a6b3d4722505b274a072be262b1112c988086116babdc4c5b07ac44902d21";
 		Objkey.clear();
-		Objkey = find_value(Objmain, "lottoryKey").get_obj();
+		Value rootkey = find_value(Objmain, "lottoryKey");
+		if (Value::null == rootkey)
+		{
+			return false;
+		}
+		Objkey = rootkey.get_obj();
 		if (Objkey.size() > 0) {
 			Object ohash = find_value(Objkey, "MerkleHash").get_obj();
 			std::string merkleHash = find_value(ohash, "MerkleHash").get_str();

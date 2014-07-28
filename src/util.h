@@ -136,10 +136,10 @@ extern volatile bool fReopenDebugLog;
 void RandAddSeed();
 void RandAddSeedPerfmon();
 
-/* Return true if log accepts specified category */
-bool LogAcceptCategory(const char* category);
 /* Send a string to the log output */
 int LogPrintStr(const std::string &str);
+
+int LogPrintStr(const char* category, const std::string &str);
 
 
 #define strprintf tfm::format
@@ -158,8 +158,8 @@ int LogPrintStr(const std::string &str);
     template<TINYFORMAT_ARGTYPES(n)>                                          \
     static inline int LogPrint(const char* category, const char* format, TINYFORMAT_VARARGS(n))  \
     {                                                                         \
-        if(!LogAcceptCategory(category)) return 0;                            \
-        return LogPrintStr(tfm::format(format, TINYFORMAT_PASSARGS(n))); \
+    	if (!fDebug) return 0;										   		\
+        return LogPrintStr(category, tfm::format(format, TINYFORMAT_PASSARGS(n))); \
     }                                                                         \
     /*   Log error and return false */                                        \
     template<TINYFORMAT_ARGTYPES(n)>                                          \
@@ -176,15 +176,12 @@ TINYFORMAT_FOREACH_ARGNUM(MAKE_ERROR_AND_LOG_FUNC)
  */
 static inline int LogPrint(const char* category, const char* format)
 {
-    if(!LogAcceptCategory(category)) return 0;
-    return LogPrintStr(format);
+	if (!fDebug) return 0;
+    return LogPrintStr(category, format);
 }
 
 inline std::string DateTimeStrFormat(const char* pszFormat, int64_t nTime)
 {
-
-
-
 //  time_t n = nTime;
 //  struct tm* ptmTime = gmtime(&n);
 //  char pszTime[200];

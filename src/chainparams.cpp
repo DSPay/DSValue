@@ -176,6 +176,7 @@ public:
         vSeeds.clear();
         vSeeds.push_back(CDNSSeedData("wallet.org", "wallet.dspay.org"));
         vSeeds.push_back(CDNSSeedData("dspay.org", "seed.dspay.org"));
+        vSeeds.push_back(CDNSSeedData("wallet3.org", "wallet3.dspay.org"));
 
         base58Prefixes[PUBKEY_ADDRESS] = list_of(0x5b);
         base58Prefixes[SCRIPT_ADDRESS] = list_of(196);
