@@ -11,8 +11,6 @@
 
 namespace SyncData {
 
-const std::string strSyncDataPubKey = "03286d659a84b8113e5369b6bf0c0bb838a4dc8768bebc434863ab08c1fe00d972";
-
 boost::shared_ptr<CLevelDBWrapper> CSyncDataDb::m_dbPoint;
 
 bool CSyncDataDb::InitializeSyncDataDb(const boost::filesystem::path &path)

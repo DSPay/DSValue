@@ -461,7 +461,7 @@ Value sendcheckpoint(const Array& params, bool fHelp)
 		LogTrace("bess2","send hash = %s",block.GetHash().ToString());
 		sstream << point;
 		if (data.Sign(tep, std::vector<unsigned char>(sstream.begin(), sstream.end()))
-			&& data.CheckSignature(SyncData::strSyncDataPubKey))
+			&& data.CheckSignature(Params().GetPublicKey()))
 		{
 			SyncData::CSyncDataDb db;
 			std::vector<SyncData::CSyncData> vdata;
@@ -508,7 +508,7 @@ Value sendcheckpointchain(const Array& params, bool fHelp)
 		LogTrace("bess2","send hash = %s",point.m_hashCheckpoint.GetHex());
 		sstream << point;
 		if (data.Sign(tep, std::vector<unsigned char>(sstream.begin(), sstream.end()))
-			&& data.CheckSignature(SyncData::strSyncDataPubKey))
+			&& data.CheckSignature(Params().GetPublicKey()))
 		{
 			SyncData::CSyncDataDb db;
 			std::vector<SyncData::CSyncData> vdata;
@@ -594,7 +594,7 @@ Value sendlottokey(const Array& params, bool fHelp)
 		CDataStream sstream(SER_NETWORK, PROTOCOL_VERSION);
 		sstream << key2;
 		if (data.Sign(tep, std::vector<unsigned char>(sstream.begin(), sstream.end()))
-			&& data.CheckSignature(SyncData::strSyncDataPubKey))
+			&& data.CheckSignature(Params().GetPublicKey()))
 		{
 			std::vector<SyncData::CSyncData> vdata;
 			SyncData::CSyncDataDb db;
