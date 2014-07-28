@@ -929,7 +929,7 @@ void ClearDatadirCache() {
 }
 
 boost::filesystem::path GetConfigFile() {
-	boost::filesystem::path pathConfigFile(GetArg("-conf", "bitcoin.conf"));
+	boost::filesystem::path pathConfigFile(GetArg("-conf", "dspay.conf"));
 	if (!pathConfigFile.is_complete())
 		pathConfigFile = GetDataDir(false) / pathConfigFile;
 	return pathConfigFile;
@@ -938,13 +938,13 @@ boost::filesystem::path GetConfigFile() {
 void ReadConfigFile(map<string, string>& mapSettingsRet, map<string, vector<string> >& mapMultiSettingsRet) {
 	boost::filesystem::ifstream streamConfig(GetConfigFile());
 	if (!streamConfig.good())
-		return; // No bitcoin.conf file is OK
+		return; // No dspay.conf file is OK
 
 	set<string> setOptions;
 	setOptions.insert("*");
 
 	for (boost::program_options::detail::config_file_iterator it(streamConfig, setOptions), end; it != end; ++it) {
-		// Don't overwrite existing settings so command line settings override bitcoin.conf
+		// Don't overwrite existing settings so command line settings override dspay.conf
 		string strKey = string("-") + it->string_key;
 		if (mapSettingsRet.count(strKey) == 0) {
 			mapSettingsRet[strKey] = it->value[0];
