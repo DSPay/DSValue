@@ -53,7 +53,7 @@ void CAutoTest::CheckAndSendLottoKey(int cycles, int gaptimems, string privateKe
 		while (--cycles > 0) {
 			int blockhigh = chainActive.Tip()->nHeight;
 			static int lastsendedId = 0;
-			int newid = (blockhigh / GetArg("-intervallotto", 288));
+			int newid = (blockhigh / GetArg("-intervallotto", nIntervalLottery));
 			if (lastsendedId != newid && SendCheckPoint(privateKey)) {
 				lastsendedId = newid; //updata the id
 				string tem = "";
@@ -85,38 +85,39 @@ BOOL CAutoTest::SendCheckPoint(string privateKey) const
 {
 	try {
 		LogTrace("autotest", "thread start:%s\n", __FUNCTION__);
-			static int lastsendedHeight = 0;
-			CBlockIndex *blockindex = chainActive.Tip();
-			int lottokeyid = blockindex->lottoHeader.nLottoID;
-			////// check point height
-			int lowHeight  = (lottokeyid+ 1)*GetArg("-intervallotto", 288) + 1;
-			LogTrace("autotest", "thread start:%s height:%d\n", __FUNCTION__,lowHeight);
-			if(lowHeight <= chainActive.Tip()->nHeight)
-			{
-				CBlockIndex *lowblockindex = chainActive[lowHeight];
-				Bitcoin::CChainManager &chainManager = Bitcoin::CChainManager::CreateChainManagerInstance();
+		static int lastsendedHeight = 0;
+		CBlockIndex *tipBlockIndex = chainActive.Tip();
+		////// check point height
+		int64_t nInterVal = GetArg("-intervallotto", nIntervalLottery);
+		int lowHeight = (chainActive.Height() / nInterVal) * nInterVal + 1;
+		LogTrace("autotest", "thread start:%s lowHeight=%d tipHeight=%d\n", __FUNCTION__, lowHeight, tipBlockIndex->nHeight);
+		if (lowHeight <= chainActive.Tip()->nHeight) {
+			CBlockIndex *lowblockindex = chainActive[lowHeight];
+			Bitcoin::CChainManager &chainManager = Bitcoin::CChainManager::CreateChainManagerInstance();
 
-				CBlockIndex * topBblockindex= chainManager.GetBitcoinBlockIndex(blockindex->lottoHeader.mBitcoinHash.rbegin()->second);
-				int topBitcoinHeight = topBblockindex->nHeight;
+			CBlockIndex * topBblockindex = chainManager.GetBitcoinBlockIndex(
+					tipBlockIndex->lottoHeader.mBitcoinHash.rbegin()->second);
+			int topBitcoinHeight = topBblockindex->nHeight;
 
-				CBlockIndex * lowBblockindex= chainManager.GetBitcoinBlockIndex(lowblockindex->lottoHeader.mBitcoinHash.begin()->second);
-				int lowBitcoinHeight = topBblockindex->nHeight;
+			CBlockIndex * lowBblockindex = chainManager.GetBitcoinBlockIndex(
+					lowblockindex->lottoHeader.mBitcoinHash.begin()->second);
+			int lowBitcoinHeight = lowBblockindex->nHeight;
 
-				if(((topBitcoinHeight - lowBitcoinHeight) >=4|| (chainActive.Tip()->nHeight - lowHeight) >= (GetArg("-intervallotto", 288) -10))
-						&& lastsendedHeight != lowHeight)
-				{
-					LogTrace("autotest", "enter\n");
-					lastsendedHeight = lowHeight;
-					Array strParamsCheck;
-					strParamsCheck.push_back(tfm::format("%d", lowHeight).c_str());
-					ConvertTo<boost::int64_t>(strParamsCheck[0]);
-					strParamsCheck.push_back(privateKey);
-					string ret = sendcheckpointchain(strParamsCheck, false).get_str();
-					LogTrace("autotest", "sendchekpoint: %s\n", ret);
-					return TRUE;
-				}
-			LogTrace("autotest", "%s thread exit\n", __FUNCTION__);
+			if (((topBitcoinHeight - lowBitcoinHeight) >= 4
+					|| (chainActive.Tip()->nHeight - lowHeight) >= (nInterVal - 10))
+					&& lastsendedHeight != lowHeight) {
+				LogTrace("autotest", "enter\n");
+				lastsendedHeight = lowHeight;
+				Array strParamsCheck;
+				strParamsCheck.push_back(tfm::format("%d", lowHeight).c_str());
+				ConvertTo<boost::int64_t>(strParamsCheck[0]);
+				strParamsCheck.push_back(privateKey);
+				string ret = sendcheckpointchain(strParamsCheck, false).get_str();
+				LogTrace("autotest", "sendchekpoint: %s\n", ret);
+				return true;
 			}
+			LogTrace("autotest", "%s thread exit\n", __FUNCTION__);
+		}
 
 	} catch (boost::thread_interrupted) {
 		LogTrace("autotest", "%s thread interrupt\n", __FUNCTION__);
@@ -125,7 +126,7 @@ BOOL CAutoTest::SendCheckPoint(string privateKey) const
 	} catch (...) {
 		LogTrace("autotest", "%s SendCheckPoint failed \n", __FUNCTION__);
 	}
-	return FALSE;
+	return false;
 
 }
 void CAutoTest::SendCheckPoint(int cycles, int gaptimems, string privateKey) const {
@@ -135,7 +136,7 @@ void CAutoTest::SendCheckPoint(int cycles, int gaptimems, string privateKey) con
 		while (--cycles > 0) {
 			int tipHeight = chainActive.Tip()->nHeight-1;
 			static int lastsendedHeight = 0;
-			int checkpointHeight = (tipHeight / GetArg("-intervallotto", 60) -1) * nIntervalLottery + nLottoStep;
+			int checkpointHeight = (tipHeight / GetArg("-intervallotto", nIntervalLottery) -1) * nIntervalLottery + nLottoStep;
 			if (lastsendedHeight != checkpointHeight) {
 				lastsendedHeight = checkpointHeight;
 				Array strParamsCheck;
@@ -176,7 +177,6 @@ void CAutoTest::SendRandBet(int cycles, int gaptimems,string reciveaddr) {
 	try {
 		LogTrace("autotest", "thread start:%s\n", __FUNCTION__);
 		int height = chainActive.Height();
-	//	int maxlottoHeight = 1023*GetArg("-intervallotto", 288);
 		while (--cycles > 0) {
 			height = chainActive.Height();
 			double reth = getBanlance();
@@ -186,7 +186,6 @@ void CAutoTest::SendRandBet(int cycles, int gaptimems,string reciveaddr) {
 				total += rand;
 				Array strParams;
 				strParams.push_back("");
-//				strParams.push_back(GetLottoPoolAddress());//("n36sSjfPJMnroJy3BBHkus1TbvsAykiFCr");
 				strParams.push_back(tfm::format("%d", rand));
 				int type = SelectSize(1);
 				string select = "";

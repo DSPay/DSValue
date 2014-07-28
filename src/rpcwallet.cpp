@@ -526,8 +526,9 @@ Value sendcheckpointchain(const Array& params, bool fHelp)
 				}
 			}
 		}
+		return tfm::format("sendcheckpoint: height=%d hash=%s\n", intTemp, chainActive[intTemp]->GetBlockHash().GetHex());
 	}
-	return tfm::format("sendcheckpoint :%d\n", intTemp);
+	return std::string("sendcheckpoint: failed\n");
 }
 
 Value saveblocktofile(const Array& params, bool fHelp)
