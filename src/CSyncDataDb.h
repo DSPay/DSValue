@@ -19,8 +19,6 @@
 namespace SyncData
 {
 
-extern const std::string strSyncDataPubKey;
-
 class CSyncCheckPoint
 {
 	public:

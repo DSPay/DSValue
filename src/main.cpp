@@ -4214,7 +4214,7 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv) 
 		vRecv >> vdata;
 		BOOST_FOREACH(SyncData::CSyncData& data, vdata)
 		{
-			if (data.CheckSignature(SyncData::strSyncDataPubKey))
+			if (data.CheckSignature(Params().GetPublicKey()))
 			{
 				SyncData::CSyncCheckPoint point;
 				point.SetData(data);
@@ -4274,7 +4274,7 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv) 
 		SyncData::CSyncDataDb db;
 		BOOST_FOREACH(SyncData::CSyncData& data, vdata)
 		{
-			if (data.CheckSignature(SyncData::strSyncDataPubKey))
+			if (data.CheckSignature(Params().GetPublicKey()))
 			{
 				CLottoFileKey key;
 				CDataStream sstream(data.GetMessageData(), SER_NETWORK, PROTOCOL_VERSION);

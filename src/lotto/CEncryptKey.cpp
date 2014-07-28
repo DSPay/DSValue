@@ -83,7 +83,7 @@ bool CObjectFile::GeneratePrivatKey(const string passwd, const int size) {
 			otmp.push_back(Pair("publickey", HexStr(pubkey.begin(), pubkey.end())));
 			Objpk.push_back(Pair(itostr(ii), otmp));
 		}
-#if 1
+#if 0
 		{
 			Object tmp;
 			tmp.push_back(Pair("index", itostr(ii)));
@@ -130,7 +130,7 @@ bool CObjectFile::GenerateClottoFile(const int size) {
 				okey.push_back(Pair("keydata", HexStr(vkey)));
 				Objkey.push_back(Pair(itostr(ii), okey));
 			}
-#if 1
+#if 0
 			{
 				Object tmp;
 				tmp.push_back(Pair("index", itostr(ii)));
