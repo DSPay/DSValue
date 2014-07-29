@@ -81,7 +81,7 @@ void CAutoTest::CheckAndSendLottoKey(int cycles, int gaptimems, string privateKe
 	}
 
 }
-BOOL CAutoTest::SendCheckPoint(string privateKey) const
+bool CAutoTest::SendCheckPoint(string privateKey) const
 {
 	try {
 		LogTrace("autotest", "thread start:%s\n", __FUNCTION__);
