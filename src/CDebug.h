@@ -113,8 +113,13 @@ static inline int Logtrace(bool flag ,const char* tag, const char* file, const c
 #define LogCfgTagBlackFileList(flag,...) CDebug::instance().FitterBlackFile(flag,__VA_ARGS__)
 
 
-#define LogTrace(tag, ...) Logtrace(tag, __FILE__, __FUNCTION__, __LINE__ , __VA_ARGS__)
-#define LogTrace2(tag, ...) Logtrace(false, tag, __FILE__, __FUNCTION__, __LINE__ , __VA_ARGS__)
+//#define LogTrace(tag, ...) Logtrace(tag, __FILE__, __FUNCTION__, __LINE__ , __VA_ARGS__)
+//#define LogTrace2(tag, ...) Logtrace(false, tag, __FILE__, __FUNCTION__, __LINE__ , __VA_ARGS__)
+
+#define LogTrace(tag, ...)
+//Logtrace(tag, __FILE__, __FUNCTION__, __LINE__ , __VA_ARGS__)
+#define LogTrace2(tag, ...)
+//Logtrace(false, tag, __FILE__, __FUNCTION__, __LINE__ , __VA_ARGS__)
 
 
 
