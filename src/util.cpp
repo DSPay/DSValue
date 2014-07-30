@@ -207,9 +207,15 @@ struct DebugLogFile
 	~DebugLogFile()
 	{
 		if(m_fileout)
-		fclose(m_fileout);
+		{
+			fclose(m_fileout);
+			m_fileout = NULL;
+		}
 		if(m_mutexDebugLog)
-		delete m_mutexDebugLog;
+		{
+			delete m_mutexDebugLog;
+			m_mutexDebugLog = NULL;
+		}
 	}
 	bool 			m_newLine;
 	FILE*			m_fileout;
