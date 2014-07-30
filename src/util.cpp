@@ -206,7 +206,9 @@ struct DebugLogFile
 	DebugLogFile():m_newLine(true), m_fileout(NULL), m_mutexDebugLog(NULL){}
 	~DebugLogFile()
 	{
+		if(m_fileout)
 		fclose(m_fileout);
+		if(m_mutexDebugLog)
 		delete m_mutexDebugLog;
 	}
 	bool 			m_newLine;
