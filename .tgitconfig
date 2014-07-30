@@ -1,4 +1,4 @@
 [tgit]
 	projectlanguage = 1033
-	logminsize = 40
+	logminsize = 15
 	warnnosignedoffby = false
