@@ -116,9 +116,9 @@ static inline int Logtrace(bool flag ,const char* tag, const char* file, const c
 //#define LogTrace(tag, ...) Logtrace(tag, __FILE__, __FUNCTION__, __LINE__ , __VA_ARGS__)
 //#define LogTrace2(tag, ...) Logtrace(false, tag, __FILE__, __FUNCTION__, __LINE__ , __VA_ARGS__)
 
-#define LogTrace(tag, ...)
+#define LogTrace(tag, ...)   LogPrint(tag, __VA_ARGS__)
 //Logtrace(tag, __FILE__, __FUNCTION__, __LINE__ , __VA_ARGS__)
-#define LogTrace2(tag, ...)
+#define LogTrace2(tag, ...)   LogPrint(tag, __VA_ARGS__)
 //Logtrace(false, tag, __FILE__, __FUNCTION__, __LINE__ , __VA_ARGS__)
 
 
