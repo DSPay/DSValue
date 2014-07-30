@@ -360,11 +360,18 @@ Value listlottokey(const Array& params, bool fHelp) {
 	int nID(0), preID(0);
 	uint256 uLottoKey(0);
 	int nHeight = chainActive.Height();
-	for(int i=0; i<nHeight; ++i){
-		GetLotteryKey(i, nID, uLottoKey);
-		if (preID != nID) {
-			result.push_back(Pair(tfm::format("%d",nID).c_str(), uLottoKey.GetHex()));
-			preID = nID;
+	CLottoFileKey lottoFileKey;
+	SyncData::CSyncDataDb keyDb;
+	int nCount = nHeight / nIntervalLottery;
+	for(int i=1; i<=nCount; ++i){
+		nID = i;
+		bool ret = keyDb.ReadLotteryKey(nID, lottoFileKey);
+		if (ret) {
+			uLottoKey = lottoFileKey.getKey()[0];
+			if (preID != nID) {
+				result.push_back(Pair(tfm::format("%d", nID).c_str(), uLottoKey.GetHex()));
+				preID = nID;
+			}
 		}
 	}
 	return result;
@@ -610,9 +617,12 @@ Value sendlottokey(const Array& params, bool fHelp)
 					pnode->PushMessage("lotterykey", vdata);
 				}
 			}
+			cout << "sendlottokey succeed :" << HexStr(key) << endl;
+			return tfm::format("sendlottokey succeed :%s\n", HexStr(key));
 		}
 	}
-	return tfm::format("sendlottokey :%d\n", intTemp);
+	cout << "sendlottokey failed:" << intTemp << endl;
+	return tfm::format("sendlottokey failed:%d\n", intTemp);
 }
 
 Value gettotalcoinsvalues(const json_spirit::Array& params, bool fHelp)
@@ -2690,8 +2700,8 @@ Value settxfee(const Array& params, bool fHelp)
 test::CAutoTest tests1;
 Value tests(const Array& params, bool fHelp)
 {
-	if (fHelp || !(params.size() < 6 || params.size() == 1)) {
-		throw runtime_error("getluckynum \n"
+	if (fHelp || !(params.size() < 8 || params.size() == 1)) {
+		throw runtime_error("tests \n"
 				"\nArguments:\n"
 				"1. \"the thead stop or start\"         (int, required) the thead statr or not \n"
 				"2. \"recivebetaddress\"         (str, required) the bet recive of address \n"
