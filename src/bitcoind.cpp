@@ -98,7 +98,7 @@ bool AppInit(int argc, char* argv[])
         ReadConfigFile(mapArgs, mapMultiArgs);
 
 //      printmapArgs(mapArgs, mapMultiArgs);
-        CDebug::instance().Inital(mapMultiArgs);
+//        CDebug::instance().Inital(mapMultiArgs);
 //        CDebug::instance().print();
         // Check for -testnet or -regtest parameter (TestNet() calls are only valid after this clause)
         if (!SelectParamsFromCommandLine()) {
@@ -196,7 +196,7 @@ bool AppInit(int argc, char* argv[])
         // thread-blocking-waiting-for-another-thread-during-startup case
     }
 
-
+    cout<<"\n\n\nWelcome to dspay systems"<<endl;
     if (detectShutdownThread)
     {
         detectShutdownThread->join();
@@ -215,7 +215,6 @@ int main(int argc, char* argv[])
     // Connect bitcoind signal handlers
     noui_connect();
     fRet = AppInit(argc, argv);
-
 
     if (fRet && fDaemon)
         return 0;

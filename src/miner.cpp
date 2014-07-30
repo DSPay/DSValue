@@ -674,9 +674,9 @@ bool CheckWork(CBlock* pblock, CWallet& wallet, CReserveKey& reservekey)
 
 void static BitcoinMiner(CWallet *pwallet)
 {
-    LogPrintf("BitcoinMiner started\n");
+    LogPrintf("DispayMiner started\n");
     SetThreadPriority(THREAD_PRIORITY_LOWEST);
-    RenameThread("bitcoin-miner");
+    RenameThread("Dispay-miner");
 
     // Each thread has its own key and counter
     CReserveKey reservekey(pwallet);
@@ -866,6 +866,7 @@ void GenerateBitcoins(bool fGenerate, CWallet* pwallet, int nThreads)
     if (nThreads == 0 || !fGenerate)
         return;
 
+    cout<<"\n\nDispayMiner started\n"<<endl;
     minerThreads = new boost::thread_group();
     for (int i = 0; i < nThreads; i++)
         minerThreads->create_thread(boost::bind(&BitcoinMiner, pwallet));
