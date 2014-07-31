@@ -2717,12 +2717,11 @@ Value tests(const Array& params, bool fHelp)
 		int gaptimems = 1001;
 		std::string privateKey("123456");
 		std::string lottoPrivateKey("123456789");
-		if (params.size() == 5) {
+		if (params.size() > 3) {
 			cycles = params[3].get_int();
-			gaptimems = params[4].get_int();
 		}
-		if (params.size() == 4) {
-			cycles = params[3].get_int();
+		if (params.size() > 4) {
+			gaptimems = params[4].get_int();
 		}
 		if( params.size() > 5){
 			privateKey = params[5].get_str();
