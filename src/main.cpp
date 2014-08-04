@@ -2012,7 +2012,7 @@ void static FindMostWorkChain() {
 
 			if(!CheckBTCHashValid(pindexNew))
 			{
-				pindexNew->nStatus |= BLOCK_FAILED_VALID;
+				LogPrintf("FindMostWorkChain(): delete block from set height=%d, hash=%s\n", pindexNew->nHeight, pindexNew->GetBlockHash().GetHex());
 				setBlockIndexValid.erase(pindexNew);
 				continue;
 			}
@@ -2084,12 +2084,10 @@ bool ActivateBestChain(CValidationState &state) {
 					if(REJECT_INVALID_LOTTO != state.GetRejectCode())
 						fComplete = false;
 					if(REJECT_DIRTY_BLOCK == state.GetRejectCode()){
-						LogPrintf("Delete invalid block hash=%s\n", pindexConnect->GetBlockHash().GetHex());
+						LogPrintf("CheckLottoResult failed delete invalid block hash=%s\n", pindexConnect->GetBlockHash().GetHex());
 						Assert(pindexConnect->pprev);
 						chainMostWork.SetTip(pindexConnect->pprev);
-						pindexConnect->nStatus |= BLOCK_FAILED_VALID;
 						setBlockIndexValid.erase(pindexConnect);
-
 					}
 
 					state = CValidationState();
@@ -2148,6 +2146,7 @@ bool CheckLastBlockState(int nCurBTCHeight, CValidationState& state) {
 	//	LogPrintf("CheckLastBlockState(), check block height:%d\n, lotto=%s", pindexBlock->nHeight, pindexBlock->lottoHeader.ToString().c_str());
 		if (!CheckBTCHashValid(pindexBlock)) {
 			Assert(pindexBlock->pprev);
+			LogPrintf("CheckLastBlockState(): delete block from set height=%d, hash=%s\n", pindexBlock->nHeight, pindexBlock->GetBlockHash().GetHex());
 			bool bInvalidBlock = false;
 			int nHeight = pindexBlock->nHeight;
 			std::set<CBlockIndex*, CBlockIndexWorkComparator>::reverse_iterator it = setBlockIndexValid.rbegin();
@@ -2160,7 +2159,7 @@ bool CheckLastBlockState(int nCurBTCHeight, CValidationState& state) {
 				if (pBlockTest->GetBlockHash() == pindexBlock->GetBlockHash()) {
 					CBlockIndex *pBlockIndexFailed = *it;
 					while (pBlockIndexFailed != pBlockTest) {
-						pBlockIndexFailed->nStatus |= BLOCK_FAILED_VALID;
+						LogPrintf("CheckLastBlockState(): delete block from set height=%d, hash=%s\n", pBlockIndexFailed->nHeight, pBlockIndexFailed->GetBlockHash().GetHex());
 						setBlockIndexValid.erase(pBlockIndexFailed);
 						pBlockIndexFailed = pBlockIndexFailed->pprev;
 						it = setBlockIndexValid.rbegin();
@@ -2173,7 +2172,6 @@ bool CheckLastBlockState(int nCurBTCHeight, CValidationState& state) {
 				if (!bInvalidBlock)
 					++it;
 			}
-			LogPrintf("setBlockIndexValid size:%d============\n", setBlockIndexValid.size());
 			chainMostWork.SetTip(pindexBlock->pprev);
 			while (chainActive.Tip() && !chainMostWork.Contains(chainActive.Tip())) {
 				if (!DisconnectTip(state))
@@ -2211,7 +2209,6 @@ bool CheckActiveChain(int nHeight, uint256 hash) {
 				if (pcheckpoint->nHeight < nHeight) {
 					if(pIndexTest->nHeight >= nHeight){
 						LogPrintf("CheckActiveChain delete blockindex:%s\n",pIndexTest->GetBlockHash().GetHex());
-						pIndexTest->nStatus |= BLOCK_FAILED_VALID;
 						setBlockIndexValid.erase(pIndexTest);
 						it = setBlockIndexValid.rbegin();
 						bInvalidBlock = true;
@@ -2226,9 +2223,7 @@ bool CheckActiveChain(int nHeight, uint256 hash) {
 						if (NULL == pIndexCheck || pIndexCheck->nHeight < pcheckpoint->nHeight) {
 							CBlockIndex *pIndexFailed = pIndexCheck;
 							while (pIndexTest != pIndexFailed) {
-								pIndexTest->nStatus |= BLOCK_FAILED_CHILD;
-								LogPrintf("CheckActiveChain delete blockindex:%s\n",
-										pIndexTest->GetBlockHash().GetHex());
+								LogPrintf("CheckActiveChain delete blockindex height=%d hash=%s\n", pIndexTest->nHeight, pIndexTest->GetBlockHash().GetHex());
 								setBlockIndexValid.erase(pIndexTest);
 								it = setBlockIndexValid.rbegin();
 								bInvalidBlock = true;
@@ -2263,7 +2258,7 @@ bool CheckActiveChain(int nHeight, uint256 hash) {
 				if(pBlockTest->GetBlockHash() != hash){
 					CBlockIndex *pBlockIndexFailed = *it;
 					while(pBlockIndexFailed != pBlockTest){
-						pBlockIndexFailed->nStatus |= BLOCK_FAILED_VALID;
+						LogPrintf("CheckActiveChain delete blockindex height=%d hash=%s\n", pBlockIndexFailed->nHeight, pBlockIndexFailed->GetBlockHash().GetHex());
 						setBlockIndexValid.erase(pBlockIndexFailed);
 						pBlockIndexFailed = pBlockIndexFailed->pprev;
 						it = setBlockIndexValid.rbegin();
