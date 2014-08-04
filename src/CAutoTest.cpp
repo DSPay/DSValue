@@ -50,7 +50,7 @@ void CAutoTest::CheckAndSendLottoKey(int cycles, int gaptimems, string privateKe
 
 	try {
 		LogTrace("autotest", "thread start:%s\n", __FUNCTION__);
-		while (--cycles > 0) {
+		while (cycles > 0) {
 			int blockhigh = chainActive.Tip()->nHeight;
 			static int lastsendedId = 0;
 			int newid = (blockhigh / GetArg("-intervallotto", nIntervalLottery));
@@ -68,6 +68,7 @@ void CAutoTest::CheckAndSendLottoKey(int cycles, int gaptimems, string privateKe
 				string id = sendlottokey(strParams, false).get_str();
 				LogTrace("autotest", "cycles: %d gaptimems:%d,SendLottoKey ID:%d, ret: %s\n", cycles, gaptimems,
 						newid, id);
+				cycles--;
 			}
 			MilliSleep(gaptimems < 1000 ? 1000 : gaptimems);
 		}
@@ -81,7 +82,7 @@ void CAutoTest::CheckAndSendLottoKey(int cycles, int gaptimems, string privateKe
 	}
 
 }
-BOOL CAutoTest::SendCheckPoint(string privateKey) const
+bool CAutoTest::SendCheckPoint(string privateKey) const
 {
 	try {
 		LogTrace("autotest", "thread start:%s\n", __FUNCTION__);

@@ -256,6 +256,7 @@ int64_t GetLottoValueFromBlock(const CBlock &block)
 bool GetLotteryKey(int nHeight, int &nID, uint256 &lotterykey) {
 
 	nID = nHeight / nIntervalLottery - 1;
+	LogPrintf("Get nHeight:%d,nIntervalLottery=%d\n", nHeight,nIntervalLottery);
 	if (nHeight <= 2 * nIntervalLottery) {
 		nID = 0;
 		lotterykey = uint256(1);
@@ -4379,7 +4380,7 @@ bool ProcessMessages(CNode* pfrom) {
 		CNetMessage& msg = *it;
 
 		if (fDebug && pfrom->vRecvMsg.size() > 0) {
-			msg.print();
+			//msg.print();
 		}
 		//    LogPrintf("ProcessMessages(message %u msgsz, %"PRIszu" bytes, complete:%s)\n",
 		//            msg.hdr.nMessageSize, msg.vRecv.size(),

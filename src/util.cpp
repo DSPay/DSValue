@@ -206,8 +206,16 @@ struct DebugLogFile
 	DebugLogFile():m_newLine(true), m_fileout(NULL), m_mutexDebugLog(NULL){}
 	~DebugLogFile()
 	{
-		fclose(m_fileout);
-		delete m_mutexDebugLog;
+		if(m_fileout)
+		{
+			fclose(m_fileout);
+			m_fileout = NULL;
+		}
+		if(m_mutexDebugLog)
+		{
+			delete m_mutexDebugLog;
+			m_mutexDebugLog = NULL;
+		}
 	}
 	bool 			m_newLine;
 	FILE*			m_fileout;

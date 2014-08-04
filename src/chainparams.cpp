@@ -30,7 +30,7 @@ const uint256 hashBitcoinStartMerkleRoot =  uint256("06d27706d63d7bc4cd6624a799c
 
 unsigned int pnSeed[] =
 {
-    0xa0fb1d73, 0xca561c73
+    0xa0fb1d73, 0xca561c73, 0x7215bb36
 };
 
 class CMainParams : public CChainParams {

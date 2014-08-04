@@ -21,7 +21,6 @@ LDFLAGS="-L/c/deps/boost_1_55_0/stage/lib \
 ./configure \
 --disable-upnp-default \
 --disable-tests \
---enable-debug \
 --without-gui \
 --with-cli \
 --without-daemon \
