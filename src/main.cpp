@@ -2821,25 +2821,6 @@ bool ProcessBlock(CValidationState &state, CNode* pfrom, CBlock* pblock, CDiskBl
 	}
 
 
-
-	CBlockIndex* pcheckpoint = Checkpoints::GetLastCheckpoint(mapBlockIndex);
-	if (pcheckpoint && pblock->hashPrevBlock != (chainActive.Tip() ? chainActive.Tip()->GetBlockHash() : uint256(0))) {
-		// Extra checks to prevent "fill up memory by spamming with bogus blocks"
-		int64_t deltaTime = pblock->GetBlockTime() - pcheckpoint->nTime;
-		if (deltaTime < 0) {
-			return state.DoS(100, error("ProcessBlock() : block with timestamp before last checkpoint"),
-					REJECT_CHECKPOINT, "time-too-old");
-		}
-		CBigNum bnNewBlock;
-		bnNewBlock.SetCompact(pblock->nBits);
-		CBigNum bnRequired;
-		bnRequired.SetCompact(ComputeMinWork(pcheckpoint->nBits, deltaTime));
-		if (bnNewBlock > bnRequired) {
-			return state.DoS(100, error("ProcessBlock() : block with too little proof-of-work"), REJECT_INVALID,
-					"bad-diffbits");
-		}
-	}
-
 	// If we don't already have its previous block, shunt it off to holding area until we get it
 	if (pblock->hashPrevBlock != 0 && !mapBlockIndex.count(pblock->hashPrevBlock)) {
 		LogPrintf("ProcessBlock: ORPHAN BLOCK %lu, prev=%s\n", (unsigned long )mapOrphanBlocks.size(),
@@ -2864,6 +2845,26 @@ bool ProcessBlock(CValidationState &state, CNode* pfrom, CBlock* pblock, CDiskBl
 		}
 		return true;
 	}
+
+	CBlockIndex* pcheckpoint = Checkpoints::GetLastCheckpoint(mapBlockIndex);
+		if (pcheckpoint && pblock->hashPrevBlock != (chainActive.Tip() ? chainActive.Tip()->GetBlockHash() : uint256(0))) {
+			// Extra checks to prevent "fill up memory by spamming with bogus blocks"
+			int64_t deltaTime = pblock->GetBlockTime() - pcheckpoint->nTime;
+			if (deltaTime < 0) {
+				return state.DoS(100, error("ProcessBlock() : block with timestamp before last checkpoint"),
+						REJECT_CHECKPOINT, "time-too-old");
+			}
+			CBigNum bnNewBlock;
+			bnNewBlock.SetCompact(pblock->nBits);
+		//	CBigNum bnRequired;
+	//		bnRequired.SetCompact(ComputeMinWork(pcheckpoint->nBits, deltaTime));DarkGravityWave3
+	//		CBlockIndex *pRequiredIndex = mapBlockIndex[pblock->hashPrevBlock];
+			const CBigNum &bnRequired = Params().ProofOfWorkLimit();
+			if (bnNewBlock > bnRequired) {
+				return state.DoS(100, error("ProcessBlock() : block with too little proof-of-work"), REJECT_INVALID,
+						"bad-diffbits");
+			}
+		}
 
 	// Store to disk
 	if (!AcceptBlock(*pblock, state, dbp))
