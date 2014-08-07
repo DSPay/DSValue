@@ -43,9 +43,9 @@ public:
         pchMessageStart[1] = 0xfe;
         pchMessageStart[2] = 0x1d;
         pchMessageStart[3] = 0x20;
-        LottoKeyMerkleRoot = "90b2e0c99951ec811bc9ae87608dd77abfb9041eeeb2b0508afc5dae80d67c49";
-        publicKey = "028a5a1099e7335e65b48b82c7efeb1d3de60dd5302c3e531ead7c532facde080b";
-        vAlertPubKey = ParseHex("028a5a1099e7335e65b48b82c7efeb1d3de60dd5302c3e531ead7c532facde080b");
+        LottoKeyMerkleRoot = "4aaff2b2016dabec30ff6fd2e5fcf0475ed80e8ab598129512231197e4611c32";
+        publicKey = "03b5ac8719a66c452de576795e22cc958d43aff12525bc5186592112b2ab745742";
+        vAlertPubKey = ParseHex("03b5ac8719a66c452de576795e22cc958d43aff12525bc5186592112b2ab745742");
         nDefaultPort = 8666;
         nRPCPort = 8667;
         bnProofOfWorkLimit = CBigNum(~uint256(0) >> 8);
