@@ -17,7 +17,8 @@ theory ,  which insures no any individual or a third party can tamper with
 it (except for the 51% attack).
 
 For more information, as well as an immediately useable, binary version of
-the Bitcoin Core software, see https://www.dspay.org/download.
+the Bitcoin Core software, see :linux_64 : http://pan.baidu.com/s/1ntypKFZ 
+win_32 : http://pan.baidu.com/s/1o6sieDk
 
 License
 -------
