@@ -1367,6 +1367,8 @@ bool CWallet::CreateTransaction(const vector<pair<CScript, int64_t> >& vecSend,
             }
         }
     }
+    if(!wtxNew.IsTransactionValid())
+    	return false;
     return true;
 }
 
