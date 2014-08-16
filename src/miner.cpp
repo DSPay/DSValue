@@ -129,6 +129,7 @@ std::string DrawLottery(int64_t drawPool, CBlockIndex *pindexPrev, std::vector<C
 		CTransaction tx = lotteryBlock.vtx[i];
 		TransactionState iTxType(NORMAL_STATE);
 		if (!tx.IsTransactionValid()) {
+			if(pDrawLotteryIndex->nHeight > 4265)
 			throw std::runtime_error("CreateNewBlock(): lottery bet is invalid");
 		}
 		if (!tx.IsCoinBase()) {

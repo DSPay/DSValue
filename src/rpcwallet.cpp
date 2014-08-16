@@ -202,7 +202,13 @@ int64_t ComputTheBetReturnValue(int height,CTxOut txout)
 			int64_t llRemains = 0;
 			plotto.GetReWardOutput(ret,llRemains);
 			if(ret.size() >=1)
-			return ret[0].nValue;
+			{
+				int64_t value = 0;
+				for(int i=0;i<ret.size();i++)
+					value += ret[i].nValue;
+					return value;
+			}
+
 		}
 		return 0;
 }
@@ -2825,4 +2831,97 @@ Value computepeernumcount(const Array& params, bool fHelp)
 	}
 	return str;
 
+}
+
+string ComputBetpeerCount(int height,CTxOut txout,string &nstr)
+{
+
+		std::vector<CTxOut> vBet;
+		vBet.push_back(txout);
+		CBlockIndex* blockindex = chainActive[height];
+		int64_t Pool= chainActive[height-1]->GetBlockHeader().lottoHeader.llPool;
+		uint256 bithash = GetLotteryHash(blockindex);
+		string ret = "";
+		if(blockindex->lottoHeader.uLottoKey != uint256(0))
+		{
+			lotto::CLotto plotto(bithash,blockindex->lottoHeader.nLottoID,blockindex->lottoHeader.uLottoKey,Pool,vBet);
+			ret = plotto.ComputePeerReward(nstr);
+		}
+		return ret;
+}
+Value getrewardbyaddr(const Array& params, bool fHelp) {
+	//params.size() < 1
+	if (fHelp) {
+		throw runtime_error("gettransactionbyaddr \n"
+				"\nArguments:\n"
+				"1. \"address\"         (string, required) get the transaction of the address \n");
+	}
+
+	map<uint256, CTransaction> revMoneyTx;
+	map<uint256, CTransaction> spendTx;
+	map<uint256,Info> spendInfo;
+	map<uint256, Info> revMoneyInfo;
+	string address = "";
+	if(params.size() == 1)
+	{
+		address = params[0].get_str();
+	}
+	else
+	{
+	    BOOST_FOREACH(const PAIRTYPE(CBitcoinAddress, CAddressBookData)& item, pwalletMain->mapAddressBook)
+	    {
+	        const CBitcoinAddress& addr = item.first;
+	        const string& strName = item.second.name;
+	        if (strName == "")
+	        {
+	        	address =addr.ToString();
+	        	break;
+	        }
+
+	    }
+	}
+	string str= address + ",";
+	CBlockIndex *pBlockIndex = chainActive.Genesis();
+	while ((pBlockIndex = chainActive.Next(pBlockIndex))) {
+		CBlock block;
+		if (!ReadBlockFromDisk(block, pBlockIndex))
+			return error("CreateNewBlock() : Read current tip block from disk failed");
+
+		BOOST_FOREACH(CTransaction &tx, block.vtx) {
+			bool bFind = false;
+			BOOST_FOREACH(CTxOut &txOut, tx.vout) {
+				CTxDestination desAddress;
+				TransactionState iTxType(NORMAL_STATE);
+				if (txOut.GetLottoTxOutType(iTxType)) {
+					if (iTxType == VALID_LOTTO_STATE) {
+						std::vector<unsigned char> betdata;
+						txOut.scriptPubKey.GetBetData(betdata);
+						lotto::CBetData strData;
+						strData << betdata;
+						if (address == CBitcoinAddress(CKeyID(strData.GetAddr())).ToString()) {
+							int beginlottoblock = pBlockIndex->nHeight + 2*GetArg("-intervallotto", nIntervalLottery);
+							if (beginlottoblock <chainActive.Height()) {
+								string strTemp = "";
+								string temp1 = ComputBetpeerCount(beginlottoblock, txOut,strTemp);
+								if(temp1 !="")
+								{
+									double temp = txOut.nValue/100000000.0;
+
+									str += tfm::format("{%s,value:%f,Select No:%s,",strTemp,temp, HexStr(strData.GetSelectV()));
+
+									str +=tfm::format("%s,",temp1);
+
+								}
+							}
+
+						}
+					}
+
+				}
+			}
+
+		}
+	}
+
+	return str;
 }

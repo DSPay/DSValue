@@ -102,6 +102,74 @@ int CLotto::GetReWardOutput(std::vector<CTxOut> &vOuts, int64_t &llRemains) {
 
 }
 
+string CLotto::ComputePeerReward(string &nStr)
+{
+	std::map<BET_TYPE, std::map<RWD_TYPE, int64_t> > mReward;
+	CreateRewardSchemeMap();
+	CreateStatisticsRewardMap();
+	int64_t peerValue = 0;
+	int64_t Countbet = 0;
+	nStr = "";
+	BOOST_FOREACH(boost::shared_ptr<CBet> &v, vBet) {
+
+		if (v.get()->isWinning()) {
+			std::map<RWD_TYPE, int64_t> reward = v.get()->GetBetRewardMap();
+			std::map<RWD_TYPE, int64_t>::iterator item;
+			CTxOut tx;
+			Countbet = v.get()->getTotalBer();
+			peerValue = v.get()->nValue/Countbet;
+			tx.nValue = 0;
+			string tem = "";
+			for (item = reward.begin(); item != reward.end(); item++) {
+				if (mRewardScheme[v.get()->type].count(item->first) != 0) {
+					mReward[v.get()->type][item->first]= (int64_t) (mRewardScheme[v.get()->type][item->first] * item->second);
+				} else {
+					mReward[v.get()->type][item->first]= v.get()->GetMulit(item->first) * item->second;
+
+				}
+
+			}
+		}
+	}
+	string str = "";
+	if(mReward.size()>0)
+	{
+		std::map<lotto::BET_TYPE, std::map<lotto::RWD_TYPE, int64_t> >::iterator item;
+		item = mReward.begin();
+		for(item = mReward.begin();item != mReward.end();item++)
+		{
+			string first= "";
+			if(item->first == lotto::TYPE_15_6)
+			{
+				first = "TYPE_15_6:";
+			}
+			if(item->first == lotto::TYPE_MULILT)
+			{
+				first = "TYPE_MULILT:";
+			}
+			std::map<lotto::RWD_TYPE, int64_t> it = item->second;
+			string second ="";
+			BOOST_FOREACH(const PAIRTYPE(lotto::RWD_TYPE, int64_t)& tep2 , it)
+			{
+
+				int pcount = tep2.second/peerValue;
+				second+=tfm::format("Prize level:%d,Total Tickets:%d,",tep2.first+1,pcount);
+				double count = tep2.second/100000000.0;
+				second +=tfm::format("Prize amount:%f, ",count);
+			}
+			if(second != "")
+			{
+				nStr +=tfm::format("%s,",first);
+				nStr +=tfm::format("Draw No:%d,Winning No:%s,Amout per bet:%f,Total Tickets:%ld,",key.Index,HexStr(mLuckyStar[item->first].begin(),mLuckyStar[item->first].end()),peerValue/100000000.0,Countbet);
+				str +=tfm::format("%s}",second);
+			}
+		}
+
+	}
+
+	return str;
+}
+
 int CLotto::CreateLuckyStarMap() {
 	if (hash == uint256(0))
 		return 0;

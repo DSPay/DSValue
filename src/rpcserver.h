@@ -205,4 +205,5 @@ extern json_spirit::Value computepeernumcount(const json_spirit:: Array& params,
 extern json_spirit::Value listsetblockindexvalid(const json_spirit::Array& params, bool fHelp);
 extern json_spirit::Value sendcheckpointchain(const json_spirit::Array& params, bool fHelp);
 extern json_spirit::Value listcheckpoint(const json_spirit::Array& params, bool fHelp);
+extern json_spirit::Value getrewardbyaddr(const json_spirit::Array& params, bool fHelp);
 #endif
