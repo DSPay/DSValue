@@ -2915,14 +2915,14 @@ Value getrewardbyaddr(const Array& params, bool fHelp) {
 								else
 								{
 									double temp = txOut.nValue/100000000.0;
-									str += tfm::format("{value:%f,Select No:%s}",temp, HexStr(strData.GetSelectV()));
+									str += tfm::format("{value:%f,Select No:%s},",temp, HexStr(strData.GetSelectV()));
 
 								}
 							}
 							else
 							{
 								double temp = txOut.nValue/100000000.0;
-								str += tfm::format("{value:%f,Select No:%s}",temp, HexStr(strData.GetSelectV()));
+								str += tfm::format("{value:%f,Select No:%s},",temp, HexStr(strData.GetSelectV()));
 							}
 
 						}
