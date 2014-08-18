@@ -2907,11 +2907,22 @@ Value getrewardbyaddr(const Array& params, bool fHelp) {
 								{
 									double temp = txOut.nValue/100000000.0;
 
-									str += tfm::format("{%s,value:%f,Select No:%s,",strTemp,temp, HexStr(strData.GetSelectV()));
+									str += tfm::format("{%svalue:%f,Select No:%s,",strTemp,temp, HexStr(strData.GetSelectV()));
 
 									str +=tfm::format("%s,",temp1);
 
 								}
+								else
+								{
+									double temp = txOut.nValue/100000000.0;
+									str += tfm::format("{value:%f,Select No:%s}",temp, HexStr(strData.GetSelectV()));
+
+								}
+							}
+							else
+							{
+								double temp = txOut.nValue/100000000.0;
+								str += tfm::format("{value:%f,Select No:%s}",temp, HexStr(strData.GetSelectV()));
 							}
 
 						}
