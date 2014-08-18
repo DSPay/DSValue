@@ -598,7 +598,7 @@ Value sendlottokey(const Array& params, bool fHelp)
 	if(!tep.empty() && (intTemp >= 0)
 	   && lotto::DspayKeyFile.ReadClottoKey(intTemp, lottoPrivateKey, key))
 	{
-		std::cout<<"sendlottokey:"<<privateKey<<", "<<lottoPrivateKey<<", "<<HexStr(key)<<endl;
+//		std::cout<<"sendlottokey:"<<privateKey<<", "<<lottoPrivateKey<<", "<<HexStr(key)<<endl;
 		uint256 temp(key);
 		std::vector<uint256> vckey;
 		vckey.push_back(temp);

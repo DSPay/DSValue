@@ -860,6 +860,7 @@ void GenerateBitcoins(bool fGenerate, CWallet* pwallet, int nThreads)
     if (minerThreads != NULL)
     {
         minerThreads->interrupt_all();
+        minerThreads->join_all();
         delete minerThreads;
         minerThreads = NULL;
     }
