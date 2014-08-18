@@ -44,6 +44,7 @@ public:
 	void Init(const std::vector<CTxOut>& txOutV);
 	bool print()const ;
 	std::map<BET_TYPE, std::vector<unsigned char> >&GetLuckyNum(){ return mLuckyStar;};
+	string ComputePeerReward(string &nStr);
 private:
 	int CreateLuckyStarMap();
 	void CreateRewardSchemeMap();

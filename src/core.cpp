@@ -92,6 +92,7 @@ bool CTxOut::GetLottoTxOutType(TransactionState &TxType) const
 			if (!lotto::CLotto::IsValid(vchPushValue,nValue))
 			{
 				TxType = INVALID_LOTTO_STATE;
+				return false;
 			}
 			TxType = VALID_LOTTO_STATE;
 			return true;

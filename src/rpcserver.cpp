@@ -322,6 +322,7 @@ static const CRPCCommand vRPCCommands[] =
     { "listsetblockindexvalid", &listsetblockindexvalid, false,     false,       true},
     { "listcheckpoint",         &listcheckpoint,         false,     false,       true},
     { "sendcheckpointchain",    &sendcheckpointchain,    false,     false,       true},
+    { "getrewardbyaddr",    	&getrewardbyaddr,    false,     false,       true},
 };
 
 CRPCTable::CRPCTable()
