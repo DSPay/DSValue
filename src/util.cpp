@@ -12,6 +12,11 @@
 #include "uint256.h"
 #include "version.h"
 #include <stdarg.h>
+#include <boost/foreach.hpp>
+#include <algorithm>    // std::find
+#include <vector>
+#include <iterator>
+
 #ifndef WIN32
 // for posix_fallocate
 #ifdef __linux_
@@ -1325,10 +1330,25 @@ static std::string memdump(const unsigned char * const base, int size) {
 	tep += "\n";
 	return tep;
 }
-std::string memdump(const std::vector<unsigned char> & printvec) {
-     string retstr = "";
+std::string memdump(std::vector<unsigned char> printvec) {
+    std::string retstr = "";
+    unsigned char gSplitFlag = 0xFF;
+    std::vector<unsigned char>::iterator it = std::find(printvec.begin(), printvec.end(), gSplitFlag);
+    string nTemp = HexStr(printvec.begin(),printvec.end());
+	int pos = nTemp.find_last_of("ff");
+	if (it != printvec.end()) {
+		std::vector<unsigned char> vRed;
+		std::vector<unsigned char> vBlue;
+		vRed.assign(printvec.begin(), it);
+		vBlue.assign(it + 1, printvec.end());
+		retstr = memdump(vRed);
+		retstr +=tfm::format("%s","ff");
+		std::string temp = memdump(vBlue);
+		retstr +=tfm::format("%s",temp);
+		return retstr;
+	}
     BOOST_FOREACH(const unsigned char& no,printvec)  {
-		retstr += tfm::format( "%02x",no);
+		retstr += tfm::format( "%02d",no);
 	}
 	return retstr;
 }

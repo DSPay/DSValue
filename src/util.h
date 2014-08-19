@@ -623,7 +623,7 @@ template <typename Callable> void TraceThread(const char* name,  Callable func)
     }
 }
 std::string VectorToString(const std::vector<unsigned char> & printvec);
-std::string memdump(const std::vector<unsigned char> & printvec) ;
+std::string memdump(const std::vector<unsigned char> printvec) ;
 int SelectSize(int total,int min);
 int SelectSize(int total);
 std::string getvchSelect(int selectsize,int totalsize);
