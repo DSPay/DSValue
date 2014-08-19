@@ -128,10 +128,6 @@ std::string DrawLottery(int64_t drawPool, CBlockIndex *pindexPrev, std::vector<C
 	for (int i = 1; i < lotteryBlock.vtx.size(); ++i) {
 		CTransaction tx = lotteryBlock.vtx[i];
 		TransactionState iTxType(NORMAL_STATE);
-		if (!tx.IsTransactionValid()) {
-			if(pDrawLotteryIndex->nHeight > 4380)
-			throw std::runtime_error("CreateNewBlock(): lottery bet is invalid");
-		}
 		if (!tx.IsCoinBase()) {
 			BOOST_FOREACH(const CTxOut& txout, tx.vout) {
 				if (txout.GetLottoTxOutType(iTxType)) {

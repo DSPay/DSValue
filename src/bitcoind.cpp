@@ -196,7 +196,8 @@ bool AppInit(int argc, char* argv[])
         // thread-blocking-waiting-for-another-thread-during-startup case
     }
 
-    cout<<"\n\n\nWelcome to dspay systems"<<endl;
+    cout<<"\n\n\nWelcome to dspay systems "<< endl
+    		<<"Version: "<<FormatFullVersion() <<endl;
     if (detectShutdownThread)
     {
         detectShutdownThread->join();

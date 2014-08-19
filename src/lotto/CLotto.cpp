@@ -33,6 +33,7 @@ void CLotto::Init(const std::vector<CTxOut>& txOutV) {
 //			betdata.get()->print();
 			betdata.get()->CreateRewardMap();
 			vBet.push_back(betdata);
+
 		} else {
 			Assert(0);
 		}
@@ -160,7 +161,7 @@ string CLotto::ComputePeerReward(string &nStr)
 			if(second != "")
 			{
 				nStr +=tfm::format("%s,",first);
-				nStr +=tfm::format("Draw No:%d,Winning No:%s,Amout per bet:%f,Total Tickets:%ld,",key.Index,HexStr(mLuckyStar[item->first].begin(),mLuckyStar[item->first].end()),peerValue/100000000.0,Countbet);
+				nStr +=tfm::format("Draw No:%d,Winning No:%s,Amout per bet:%f,Total Tickets:%ld,",key.Index,memdump(mLuckyStar[item->first]),peerValue/100000000.0,Countbet);
 				str +=tfm::format("%s}",second);
 			}
 		}
