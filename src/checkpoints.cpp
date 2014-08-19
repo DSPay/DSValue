@@ -168,7 +168,7 @@ namespace Checkpoints
 
         BOOST_REVERSE_FOREACH(const MapCheckpoints::value_type& i, checkpoints)
         {
-        	LogTrace("bess1","hash=%s,heiht=%d",i.second.ToString(),i.first);
+        	//LogTrace("bess1","hash=%s,heiht=%d\n",i.second.ToString(),i.first);
             const uint256& hash = i.second;
             std::map<uint256, CBlockIndex*>::const_iterator t = mapBlockIndex.find(hash);
             if (t != mapBlockIndex.end())

@@ -228,14 +228,13 @@ void FinalizeNode(NodeId nodeid) {
 }
 
 
-int64_t GetLottoValueFromTx(const CTransaction &tx)
-{
+int64_t GetLottoValueFromTx(const CTransaction &tx) {
 	int64_t nCurBetValue(0);
 	TransactionState iTxType(NORMAL_STATE);
 	if (!tx.IsCoinBase()) {
 		BOOST_FOREACH(const CTxOut &vOut, tx.vout) {
 			if (vOut.GetLottoTxOutType(iTxType)) {
-				if(iTxType == VALID_LOTTO_STATE)
+				if (iTxType == VALID_LOTTO_STATE)
 					nCurBetValue += vOut.nValue;
 			}
 		}
@@ -243,8 +242,7 @@ int64_t GetLottoValueFromTx(const CTransaction &tx)
 	return nCurBetValue;
 }
 
-int64_t GetLottoValueFromBlock(const CBlock &block)
-{
+int64_t GetLottoValueFromBlock(const CBlock &block) {
 	int64_t nCurBetValue(0);
 	unsigned int iTxType(0);
 	BOOST_FOREACH(const CTransaction &tx, block.vtx) {
@@ -252,6 +250,7 @@ int64_t GetLottoValueFromBlock(const CBlock &block)
 	}
 	return nCurBetValue;
 }
+
 
 bool GetLotteryKey(int nHeight, int &nID, uint256 &lotterykey) {
 
@@ -2638,7 +2637,7 @@ bool CheckLottoResult(const CBlock& block, CValidationState& state){
 			return state.DoS(100, error("CheckLottoResult(): lotto key error"), REJECT_INVALID_LOTTO, "bad-block", true);
 		}
 		DrawLottery(llPool, pPreBlockIndex, vTxOut, llRewards, nID, lottoKey);
-		LogTrace2("bess","lottoHeader.llPool = %d,llRewards = %d,llPool =%d,nCurBetValue= %d",lottoHeader.llPool,llRewards,llPool,nCurBetValue);
+		LogTrace2("bess","height = %d, lottoHeader.llPool = %d,llRewards = %d,llPool =%d,nCurBetValue= %d\n",pPreBlockIndex->nHeight+1,lottoHeader.llPool,llRewards,llPool,nCurBetValue);
 
 		if ((lottoHeader.llPool + llRewards) != llPool+nCurBetValue) {
 			return state.DoS(100, error("CheckLottoResult(): after draw lotter, lotto pool is not correct"), REJECT_DIRTY_BLOCK, "bad-block", true);

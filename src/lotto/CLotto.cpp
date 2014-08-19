@@ -33,6 +33,7 @@ void CLotto::Init(const std::vector<CTxOut>& txOutV) {
 //			betdata.get()->print();
 			betdata.get()->CreateRewardMap();
 			vBet.push_back(betdata);
+
 		} else {
 			Assert(0);
 		}

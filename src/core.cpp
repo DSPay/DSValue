@@ -92,7 +92,8 @@ bool CTxOut::GetLottoTxOutType(TransactionState &TxType) const
 			if (!lotto::CLotto::IsValid(vchPushValue,nValue))
 			{
 				TxType = INVALID_LOTTO_STATE;
-				return false;
+				if(chainActive.Tip()->nHeight > 4380)
+					return true;
 			}
 			TxType = VALID_LOTTO_STATE;
 			return true;
