@@ -598,7 +598,7 @@ Value sendlottokey(const Array& params, bool fHelp)
 	if(!tep.empty() && (intTemp >= 0)
 	   && lotto::DspayKeyFile.ReadClottoKey(intTemp, lottoPrivateKey, key))
 	{
-		std::cout<<"sendlottokey:"<<privateKey<<", "<<lottoPrivateKey<<", "<<HexStr(key)<<endl;
+//		std::cout<<"sendlottokey:"<<privateKey<<", "<<lottoPrivateKey<<", "<<HexStr(key)<<endl;
 		uint256 temp(key);
 		std::vector<uint256> vckey;
 		vckey.push_back(temp);
@@ -2906,12 +2906,23 @@ Value getrewardbyaddr(const Array& params, bool fHelp) {
 								if(temp1 !="")
 								{
 									double temp = txOut.nValue/100000000.0;
-
-									str += tfm::format("{%s,value:%f,Select No:%s,",strTemp,temp, HexStr(strData.GetSelectV()));
+									std::vector<unsigned char> nselect = strData.GetSelectV();
+									str += tfm::format("{%svalue:%f,Select No:%s,",strTemp,temp, memdump(nselect));
 
 									str +=tfm::format("%s,",temp1);
 
 								}
+								else
+								{
+									double temp = txOut.nValue/100000000.0;
+									str += tfm::format("{value:%f,Select No:%s},",temp, memdump(strData.GetSelectV()));
+
+								}
+							}
+							else
+							{
+								double temp = txOut.nValue/100000000.0;
+								str += tfm::format("{value:%f,Select No:%s}",temp, memdump(strData.GetSelectV()));
 							}
 
 						}

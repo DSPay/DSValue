@@ -68,6 +68,7 @@ Value getinfo(const Array& params, bool fHelp)
     }
 #endif
     obj.push_back(Pair("blocks",        (int)chainActive.Height()));
+    obj.push_back(Pair("lotto id",        (int)chainActive.Tip()->lottoHeader.nLottoID));
     obj.push_back(Pair("timeoffset",    (boost::int64_t)GetTimeOffset()));
     obj.push_back(Pair("connections",   (int)vNodes.size()));
     obj.push_back(Pair("proxy",         (proxy.first.IsValid() ? proxy.first.ToStringIPPort() : string())));
